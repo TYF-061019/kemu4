@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>科目四安全文明驾驶 · 题库练习</title>
+<style>
+  :root {
+    --bg: #F1F2F4;
+    --card: #FFFFFF;
+    --surface: #F5F6F8;
+    --text: #1A1A1A;
+    --text-muted: #6B7280;
+    --border: #E5E7EB;
+    --brand: #0FDC78;
+    --brand-strong: #05994F;
+    --brand-soft: #E5FFF2;
+    --brand-text: #004D26;
+    --brand-on: #004D26;
+    --success: #1DC981;
+    --danger: #E8463A;
+    --danger-soft: #FDEDEC;
+    --warning: #EFAA17;
+    --info: #3B82F6;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F1113;
+      --card: #1A1D20;
+      --surface: #23272B;
+      --text: #E8EAED;
+      --text-muted: #9AA3AD;
+      --border: #2E333A;
+      --brand: #32F08C;
+      --brand-strong: #0AB861;
+      --brand-soft: #10301F;
+      --brand-text: #E5FFF2;
+      --brand-on: #004D26;
+      --danger-soft: #3A1F1D;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 12px; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    padding: 8px 0 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .topbar h1 { font-size: 17px; font-weight: 600; }
+  .score-pill {
+    font-size: 12px; color: var(--brand-text);
+    background: var(--brand-soft); border-radius: 999px;
+    padding: 4px 12px; white-space: nowrap; font-weight: 500;
+  }
+
+  .tabs {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    background: var(--surface); border-radius: 12px; padding: 4px; margin-bottom: 12px;
+  }
+  .tab {
+    border: none; background: transparent; color: var(--text-muted);
+    font-size: 13px; font-weight: 500; padding: 8px 0; border-radius: 9px; cursor: pointer;
+  }
+  .tab.active { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+  }
+
+  .progress { height: 6px; background: var(--surface); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
+  .progress-fill { height: 100%; width: 0; background: var(--brand); border-radius: 999px; transition: width .2s ease; }
+
+  .q-tag {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px; margin-right: 6px;
+  }
+  .tag-judge { background: #FFF3CD; color: #8A6D00; }
+  .tag-single { background: #DBEAFE; color: #1E40AF; }
+  .tag-multi { background: #FCE7F3; color: #9D174D; }
+  @media (prefers-color-scheme: dark) {
+    .tag-judge { background: #3D3114; color: #FFD966; }
+    .tag-single { background: #1E3A5F; color: #93C5FD; }
+    .tag-multi { background: #4A1F3A; color: #F9A8D4; }
+  }
+
+  .q-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .q-text { font-size: 16px; font-weight: 600; margin-bottom: 14px; line-height: 1.5; }
+
+  .opt {
+    display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left;
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: var(--radius); padding: 11px 14px; margin-bottom: 9px;
+    font-size: 14px; color: var(--text); cursor: pointer;
+    transition: border-color .12s ease, background-color .12s ease;
+  }
+  .opt:active { background: var(--surface); }
+  .opt:disabled { cursor: default; }
+  .opt .circle {
+    flex: 0 0 20px; width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+  }
+  .opt.multi .circle { border-radius: 5px; }
+  .opt.correct { border-color: var(--success); background: var(--brand-soft); font-weight: 600; }
+  .opt.correct .circle { background: var(--success); border-color: var(--success); color: #fff; }
+  .opt.wrong { border-color: var(--danger); background: var(--danger-soft); }
+  .opt.wrong .circle { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .opt:disabled:not(.correct):not(.wrong) { opacity: .55; }
+
+  .feedback {
+    background: var(--surface); border-radius: var(--radius); padding: 12px 14px;
+    margin: 4px 0 14px; font-size: 14px;
+  }
+  .fb-line { font-weight: 600; }
+  .fb-line.good { color: var(--success); }
+  .fb-line.bad { color: var(--danger); }
+  .fb-op { margin-top: 4px; font-size: 13px; }
+  .fb-tip { margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+
+  .btn {
+    display: block; width: 100%; border: none; border-radius: var(--radius);
+    background: var(--brand); color: var(--brand-on);
+    font-size: 16px; font-weight: 600; padding: 13px 0; cursor: pointer;
+  }
+  .btn.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { background: var(--surface); color: var(--text-muted); }
+
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .res-score { font-size: 44px; font-weight: 700; text-align: center; margin: 8px 0 4px; }
+  .res-grade { text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
+  .res-pass { color: var(--success); }
+  .res-fail { color: var(--danger); }
+  .res-sub { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+  .wrow {
+    background: var(--surface); border-left: 3px solid var(--danger);
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .wrow-q { font-size: 14px; font-weight: 500; }
+  .wrow-a { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .wrow-a b { color: var(--success); }
+
+  .cat-group { margin-bottom: 14px; }
+  .cat-group h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .q-item {
+    background: var(--surface); border-radius: 8px; padding: 10px 12px;
+    margin-bottom: 6px; font-size: 13px;
+  }
+  .q-item .qa { color: var(--brand-strong); font-weight: 600; margin-top: 3px; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .stat-box { background: var(--surface); border-radius: 10px; padding: 12px; text-align: center; }
+  .stat-box .num { font-size: 22px; font-weight: 700; }
+  .stat-box .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .hidden { display: none; }
+  .footer { text-align: center; font-size: 12px; color: var(--text-muted); padding: 8px 0 20px; }
+  .empty { text-align: center; color: var(--text-muted); padding: 20px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>科目四 · 安全文明驾驶</h1>
+    <span class="score-pill" id="scorePill">答对 0</span>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="quiz">模拟考试</button>
+    <button class="tab" data-tab="wrong">错题本</button>
+    <button class="tab" data-tab="browse">题库</button>
+    <button class="tab" data-tab="help">速记</button>
+  </div>
+
+  <div id="viewQuiz">
+    <div class="card" id="quizCard">
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <div id="quizBody"></div>
+    </div>
+  </div>
+
+  <div id="viewWrong" class="hidden"></div>
+  <div id="viewBrowse" class="hidden"></div>
+  <div id="viewHelp" class="hidden"></div>
+
+  <div class="footer">收藏本页，考前随时打开练一练</div>
+</div>
+
+<script>
+var QUESTIONS = [
+  // ===== 安全行车常识 =====
+  { type: "judge", cat: "安全行车", q: "机动车驾驶人在驾驶证有效期满前90日内可以申请换证。", a: true, tip: "驾驶证有效期满前90日内，向机动车驾驶证核发地车辆管理所申请换证。" },
+  { type: "judge", cat: "安全行车", q: "机动车在高速公路上行驶，车速超过每小时100公里时，应当与同车道前车保持100米以上的距离。", a: true, tip: "车速100km/h以上，车距100米以上；100以下，车距50米以上。" },
+  { type: "judge", cat: "安全行车", q: "机动车在高速公路上行驶时，不得在匝道、加速车道或者减速车道上超车。", a: true },
+  { type: "judge", cat: "安全行车", q: "在道路上发生交通事故，未造成人身伤亡，当事人对事实及成因无争议的，可以即行撤离现场，恢复交通，自行协商处理损害赔偿事宜。", a: true, tip: "轻微事故可撤离现场协商，不必等交警。" },
+  { type: "judge", cat: "安全行车", q: "机动车通过没有交通信号灯、交通标志、交通标线或者交通警察指挥的交叉路口时，应当减速慢行，并让行人和优先通行的车辆先行。", a: true },
+  { type: "judge", cat: "安全行车", q: "驾驶机动车在没有中心线的城市道路上，最高时速不能超过70公里。", a: false, tip: "无中心线城市道路限速30km/h，公路限速40km/h。" },
+  { type: "judge", cat: "安全行车", q: "在道路上驾驶机动车追逐竞驶，情节恶劣的，处拘役并处罚金。", a: true, tip: "危险驾驶罪：追逐竞驶情节恶劣、醉酒驾驶机动车等。" },
+  { type: "single", cat: "安全行车", q: "机动车在高速公路上行驶，遇有雾、雨、雪、沙尘、冰雹等低能见度气象条件时，能见度小于200米时，车速不得超过每小时多少公里？", options: ["40公里", "50公里", "60公里", "80公里"], a: 1, tip: "能见度<200m，限速60km/h，车距100m；<100m，限速40，车距50m；<50m，限速20，就近驶离。" },
+  { type: "single", cat: "安全行车", q: "驾驶机动车在高速公路上行驶，车速低于每小时100公里时，与同车道前车的最小距离是多少？", options: ["30米", "40米", "50米", "60米"], a: 2 },
+  { type: "single", cat: "安全行车", q: "机动车在道路上发生故障，难以移动的，应当在来车方向设置警告标志，高速公路上警告标志设置位置为故障车来车方向多少米以外？", options: ["50米", "100米", "150米", "200米"], a: 2, tip: "普通道路50-100米，高速公路150米以外。" },
+  { type: "single", cat: "安全行车", q: "驾驶机动车在高速公路上发生故障时，正确的做法是？", options: ["立即停车检查", "开启危险报警闪光灯，将车移到应急车道", "在车后放置警告标志后离开", "继续行驶到服务区"], a: 1 },
+  { type: "multi", cat: "安全行车", q: "机动车在高速公路上行驶，不得有下列哪些行为？", options: ["倒车、逆行、穿越中央分隔带掉头", "在匝道、加速车道或者减速车道上超车", "骑、轧车行道分界线或者在路肩上行驶", "非紧急情况时在应急车道行驶或者停车"], a: [0,1,2,3], tip: "以上四项都是高速公路禁止行为。" },
+  { type: "multi", cat: "安全行车", q: "机动车驾驶人有下列哪些行为的，处200元罚款？", options: ["驾驶机动车在高速公路上倒车、逆行", "驾驶机动车在高速公路上穿越中央分隔带掉头", "驾驶机动车在高速公路违法占用应急车道行驶", "驾驶机动车在高速公路上正常行驶"], a: [0,1,2] },
+
+  // ===== 文明驾驶 =====
+  { type: "judge", cat: "文明驾驶", q: "驾驶机动车遇到前方车辆停车排队等候或者缓慢行驶时，可以从前方车辆两侧穿插或者超越行驶。", a: false, tip: "不得穿插或超越排队车辆，应依次排队。" },
+  { type: "judge", cat: "文明驾驶", q: "驾驶机动车在拥堵的路口遇到有车辆插入时，应当主动避让，避免发生剐蹭。", a: true, tip: "文明驾驶，主动礼让。" },
+  { type: "judge", cat: "文明驾驶", q: "驾驶机动车遇行人正在通过人行横道时，应当停车让行。", a: true, tip: "人行横道必须停车礼让行人。" },
+  { type: "judge", cat: "文明驾驶", q: "驾驶机动车行经没有交通信号的道路时，遇行人横过道路，应当避让。", a: true },
+  { type: "single", cat: "文明驾驶", q: "驾驶机动车在道路上行驶，前方车辆突然减速，正确的做法是？", options: ["立即加速超车", "鸣喇叭催促", "减速慢行，保持安全距离", "紧急制动"], a: 2 },
+  { type: "single", cat: "文明驾驶", q: "驾驶机动车遇到前方有行人横穿马路，正确的做法是？", options: ["鸣喇叭警示", "加速通过", "减速或停车避让", "保持原速行驶"], a: 2 },
+  { type: "single", cat: "文明驾驶", q: "驾驶机动车在狭窄道路上会车，遇到对向来车，正确的做法是？", options: ["加速通过", "减速靠右让行", "鸣喇叭示意对方让行", "停车等待对方先过"], a: 1 },
+  { type: "multi", cat: "文明驾驶", q: "驾驶机动车时，下列哪些行为属于不文明驾驶行为？", options: ["遇行人正在通过人行横道不停车让行", "遇前方车辆排队时穿插超越", "遇堵车时随意鸣喇叭", "夜间会车时不按规定使用灯光"], a: [0,1,2,3] },
+
+  // ===== 违法综合判断 =====
+  { type: "judge", cat: "违法判断", q: "饮酒后驾驶机动车的，处暂扣六个月机动车驾驶证，并处一千元以上二千元以下罚款。", a: true, tip: "酒驾：暂扣6个月驾照，罚款1000-2000元。" },
+  { type: "judge", cat: "违法判断", q: "醉酒驾驶机动车的，由公安机关交通管理部门约束至酒醒，吊销机动车驾驶证，依法追究刑事责任；五年内不得重新取得机动车驾驶证。", a: true, tip: "醉驾：吊销驾照，追刑责，5年内不得重考。" },
+  { type: "judge", cat: "违法判断", q: "机动车驾驶人初次申领机动车驾驶证后的12个月为实习期。", a: true, tip: "实习期为12个月。" },
+  { type: "judge", cat: "违法判断", q: "驾驶机动车不按规定使用灯光的，一次记1分。", a: true, tip: "不按规定用灯光记1分。" },
+  { type: "judge", cat: "违法判断", q: "驾驶机动车在高速公路或者城市快速路上违法占用应急车道行驶的，一次记6分。", a: true, tip: "违法占用应急车道记6分。" },
+  { type: "single", cat: "违法判断", q: "机动车驾驶人有饮酒、醉酒、服用国家管制的精神药品或者麻醉药品嫌疑的，公安机关交通管理部门应当如何处理？", options: ["罚款200元", "扣留机动车驾驶证", "扣留机动车", "拘留15日"], a: 1, tip: "有酒驾毒驾嫌疑的，扣留驾驶证。" },
+  { type: "single", cat: "违法判断", q: "饮酒后驾驶机动车被处罚，再次饮酒后驾驶机动车的，处十日以下拘留，并处一千元以上二千元以下罚款，作出什么处罚？", options: ["暂扣机动车驾驶证", "吊销机动车驾驶证", "拘留并罚款", "吊销机动车驾驶证，五年内不得重新取得"], a: 1, tip: "再次酒驾：吊销驾照，10日以下拘留，罚款1000-2000元。" },
+  { type: "single", cat: "违法判断", q: "驾驶拼装的机动车或者已达到报废标准的机动车上道路行驶的，公安机关交通管理部门应当予以收缴，强制报废，并对驾驶人处以多少元罚款？", options: ["200元以上500元以下", "200元以上2000元以下", "500元以上2000元以下", "1000元以上2000元以下"], a: 1, tip: "驾驶报废车：收缴强制报废，罚款200-2000元，吊销驾照。" },
+  { type: "single", cat: "违法判断", q: "机动车行驶超过规定时速50%以上的，处200元以上2000元以下罚款，可以并处什么处罚？", options: ["扣留机动车", "吊销机动车驾驶证", "拘留15日", "记6分"], a: 1, tip: "超速50%以上：罚款200-2000元，可并处吊销驾照。" },
+  { type: "multi", cat: "违法判断", q: "下列哪些行为属于交通肇事罪的情形？", options: ["死亡一人或者重伤三人以上，负事故全部或者主要责任的", "死亡三人以上，负事故同等责任的", "造成公共财产或者他人财产直接损失，负事故全部或者主要责任，无能力赔偿数额在三十万元以上的", "重伤一人以上，负事故全部或者主要责任，且酒后驾驶的"], a: [0,1,2,3], tip: "以上均构成交通肇事罪。" },
+  { type: "multi", cat: "违法判断", q: "机动车驾驶人有下列哪些违法行为之一的，一次记12分？", options: ["驾驶与准驾车型不符的机动车的", "饮酒后驾驶机动车的", "驾驶营运客车（不包括公共汽车）、校车载人超过核定人数20%以上的", "造成交通事故后逃逸，尚不构成犯罪的"], a: [0,1,2,3], tip: "这四种都是记12分的情形。" },
+  { type: "multi", cat: "违法判断", q: "机动车驾驶人有下列哪些违法行为之一的，一次记6分？", options: ["机动车驾驶证被暂扣期间驾驶机动车的", "驾驶机动车违反道路交通信号灯通行的", "驾驶营运客车（不包括公共汽车）、校车载人超过核定人数未达20%的", "驾驶其他载客汽车载人超过核定人数20%以上的"], a: [0,1,2,3] },
+
+  // ===== 紧急情况处置 =====
+  { type: "judge", cat: "紧急避险", q: "高速行车中遇转向突然失控时，驾驶人要立即踩制动踏板，强制减速停车。", a: false, tip: "转向失控时，不可急踩刹车，应缓慢减速，握稳方向。" },
+  { type: "judge", cat: "紧急避险", q: "机动车发生爆胎后，驾驶人在尚未控制住车速前，不要冒险使用行车制动器停车，以避免机动车横甩发生更大的险情。", a: true, tip: "爆胎后先握稳方向，再缓慢减速。" },
+  { type: "judge", cat: "紧急避险", q: "高速行驶的机动车，在转向失控的情况下使用紧急制动，很容易造成翻车。", a: true },
+  { type: "judge", cat: "紧急避险", q: "机动车在行驶中，遇雨雪天气向右侧滑时，要向左打方向，使其稳定。", a: false, tip: "侧滑时应向侧滑方向打轮，即右侧滑向右打。" },
+  { type: "judge", cat: "紧急避险", q: "制动时前车轮抱死会出现丧失转向能力的情况。", a: true, tip: "前轮抱死会失去转向能力，后轮抱死会甩尾。" },
+  { type: "single", cat: "紧急避险", q: "机动车行驶中遇转向突然不灵时，驾驶人要如何处置？", options: ["紧急制动", "抢挂低速挡", "握稳转向盘，立即松抬加速踏板，踏下制动踏板", "迅速踏下离合器踏板"], a: 2 },
+  { type: "single", cat: "紧急避险", q: "机动车行驶中轮胎突然爆裂时，驾驶人应当？", options: ["紧急制动", "握稳转向盘，慢慢制动减速", "迅速向相反方向转向", "迅速采取紧急制动"], a: 1, tip: "爆胎：握稳方向，缓慢减速，不可急刹。" },
+  { type: "single", cat: "紧急避险", q: "机动车在高速公路上发生故障时，车上人员应当如何处置？", options: ["留在车上等待救援", "迅速转移到右侧路肩上或者应急车道内", "在车道内检修车辆", "在车前方设置警告标志"], a: 1, tip: "人员应撤离到护栏外安全地带。" },
+  { type: "multi", cat: "紧急避险", q: "机动车发生交通事故后，防止二次事故的有效措施是？", options: ["疏散人员", "开启危险报警闪光灯", "标记伤员的原始位置", "正确放置危险警告标志"], a: [0,1,3], tip: "标记伤员位置是急救要求，防二次事故主要靠疏散人员+开双闪+放警告标志。" },
+  { type: "multi", cat: "紧急避险", q: "机动车在行驶中突然发生火灾时，下列哪些做法是正确的？", options: ["立即停车，关闭发动机", "迅速撤离人员", "使用随车灭火器灭火", "开启发动机罩灭火"], a: [0,1,2], tip: "不可打开发动机罩，以免空气助燃。" },
+
+  // ===== 恶劣气候与复杂道路 =====
+  { type: "judge", cat: "恶劣气候", q: "机动车在冰雪道路上行驶时，应当安装防滑链，降低车速，避免紧急制动。", a: true },
+  { type: "judge", cat: "恶劣气候", q: "机动车在雾天行驶时，应当开启雾灯、近光灯、示廓灯、前后位灯和危险报警闪光灯。", a: true, tip: "雾天必须开雾灯和双闪。" },
+  { type: "judge", cat: "恶劣气候", q: "雨天路面湿滑，车辆制动距离增大，行车中尽量使用紧急制动减速。", a: false, tip: "雨天应避免紧急制动，以防侧滑。" },
+  { type: "judge", cat: "恶劣气候", q: "大风天气行车，当驾驶人感到方向盘突然难以控制时，应逆风向转动方向盘。", a: false, tip: "大风时应减速，双手握稳方向盘，不可猛打方向。" },
+  { type: "single", cat: "恶劣气候", q: "机动车在冰雪路面行驶时，最高时速不得超过多少公里？", options: ["20公里", "30公里", "40公里", "50公里"], a: 1, tip: "冰雪道路限速30km/h。" },
+  { type: "single", cat: "恶劣气候", q: "雾天行车，能见度低于50米时，机动车最高时速不得超过多少？", options: ["20公里", "30公里", "40公里", "50公里"], a: 0, tip: "能见度<50m，限速20km/h，并尽快驶离高速公路。" },
+  { type: "single", cat: "恶劣气候", q: "机动车在泥泞路段后轮发生侧滑时，应将方向盘向哪个方向转动？", options: ["侧滑的同方向", "侧滑的反方向", "保持不动", "任意方向"], a: 0, tip: "后轮侧滑向同方向打轮，前轮侧滑向反方向打轮。" },
+  { type: "multi", cat: "恶劣气候", q: "机动车在山区道路上行驶，下列哪些做法是正确的？", options: ["下长坡时空挡滑行", "下长坡时利用发动机制动", "上坡时提前减挡，保持足够动力", "转弯时减速、鸣喇叭、靠右行"], a: [1,2,3], tip: "下长坡不可空挡滑行，应用发动机制动。" },
+  { type: "multi", cat: "恶劣气候", q: "驾驶机动车通过漫水路时，下列哪些做法是正确的？", options: ["停车察明水情", "确认安全后，低速通过", "高速冲过", "中途不得停车"], a: [0,1,3] },
+
+  // ===== 伤员急救与危化品 =====
+  { type: "judge", cat: "急救危化", q: "抢救有害气体中毒伤员时，首先应将伤员移到有新鲜空气的地方。", a: true, tip: "中毒急救第一步：脱离有毒环境。" },
+  { type: "judge", cat: "急救危化", q: "伤员骨折处出血时，应先固定骨折部位，再止血。", a: false, tip: "应先止血，再固定骨折部位。" },
+  { type: "judge", cat: "急救危化", q: "烧伤伤员口渴时，可喝少量的淡盐水。", a: true, tip: "烧伤伤员可喝淡盐水补充体液。" },
+  { type: "judge", cat: "急救危化", q: "对无骨端外露的骨折伤员肢体固定时，要超过伤口上下关节。", a: true, tip: "固定应超过上下两个关节。" },
+  { type: "judge", cat: "急救危化", q: "危险化学品具有爆炸、易燃、毒害、腐蚀、放射性等特性。", a: true },
+  { type: "single", cat: "急救危化", q: "伤员下肢骨折固定时，肢体要处于什么姿势？", options: ["伸直位", "屈曲位", "自然位", "任意姿势"], a: 0, tip: "下肢骨折伸直位固定。" },
+  { type: "single", cat: "急救危化", q: "搬运昏迷或有窒息危险的伤员时，应采用的姿势是？", options: ["仰卧位", "俯卧位", "侧俯卧位", "半卧位"], a: 2, tip: "昏迷伤员用侧俯卧位，防止窒息。" },
+  { type: "single", cat: "急救危化", q: "火药、炸药和起爆药属于哪类危险化学品？", options: ["易燃固体", "爆炸品", "氧化剂", "毒害品"], a: 1 },
+  { type: "multi", cat: "急救危化", q: "下列哪些物品属于易燃固体？", options: ["硫磺", "红磷", "硝化棉", "酒精"], a: [0,1,2], tip: "酒精属于易燃液体。" },
+  { type: "multi", cat: "急救危化", q: "搬运脊柱骨折的伤员时，下列哪些做法是错误的？", options: ["使用硬板担架搬运", "使用软担架搬运", "一人抬头一人抬脚搬运", "多人平托搬运"], a: [1,2], tip: "脊柱骨折必须用硬板担架，多人平托，不可用软担架或抱头抬脚。" },
+
+  // ===== 交通标志标线 =====
+  { type: "judge", cat: "标志标线", q: "红色圆圈内加红色斜杠的标志是禁止标志。", a: true },
+  { type: "judge", cat: "标志标线", q: "黄色虚线是禁止跨越对向车行道分界线。", a: false, tip: "黄色虚线是允许跨越的对向车行道分界线。" },
+  { type: "judge", cat: "标志标线", q: "白色实线是禁止跨越同向车行道分界线。", a: true },
+  { type: "single", cat: "标志标线", q: "红色圆形标志属于哪类标志？", options: ["警告标志", "禁令标志", "指示标志", "指路标志"], a: 1, tip: "禁令标志为红色圆形。" },
+  { type: "single", cat: "标志标线", q: "黄色三角形标志属于哪类标志？", options: ["警告标志", "禁令标志", "指示标志", "指路标志"], a: 0, tip: "警告标志为黄底黑边三角形。" },
+  { type: "single", cat: "标志标线", q: "蓝色圆形标志属于哪类标志？", options: ["警告标志", "禁令标志", "指示标志", "指路标志"], a: 2, tip: "指示标志为蓝色圆形或方形。" },
+  { type: "multi", cat: "标志标线", q: "下列哪些属于禁止标线？", options: ["黄色实线", "白色实线", "停止线", "导流线"], a: [0,1,3], tip: "停止线属于指示标线。" },
+
+  // ===== 综合判断 =====
+  { type: "judge", cat: "综合", q: "驾驶机动车时，拨打接听手持电话、观看电视等妨碍安全驾驶的行为，一次记2分。", a: true, tip: "开车打电话记2分。" },
+  { type: "judge", cat: "综合", q: "上道路行驶的机动车未悬挂机动车号牌的，一次记12分。", a: true },
+  { type: "judge", cat: "综合", q: "驾驶机动车在城市快速路上行驶时，驾驶人未按规定使用安全带的，一次记2分。", a: true },
+  { type: "single", cat: "综合", q: "机动车在道路上发生轻微交通事故，应当如何处理？", options: ["在现场等待交警", "撤离现场，恢复交通，自行协商", "报警后等待", "把车开到路边"], a: 1 },
+  { type: "single", cat: "综合", q: "驾驶机动车在没有限速标志、标线的城市道路上行驶，最高时速不得超过多少？", options: ["30公里", "40公里", "50公里", "70公里"], a: 0, tip: "无中心线城市道路限速30km/h，有中心线50km/h。" },
+  { type: "single", cat: "综合", q: "机动车在没有限速标志、标线的公路上行驶，同方向只有1条机动车道的，最高时速不得超过多少？", options: ["40公里", "50公里", "60公里", "70公里"], a: 3, tip: "公路无中心线限速40，有中心线限速70。" },
+  { type: "multi", cat: "综合", q: "驾驶机动车时，下列哪些行为会被一次记12分？", options: ["驾驶与准驾车型不符的机动车", "饮酒后驾驶机动车", "驾驶机动车在高速公路上倒车、逆行", "使用伪造、变造的机动车号牌"], a: [0,1,2,3] },
+  { type: "multi", cat: "综合", q: "机动车在道路上发生故障后，正确的做法是？", options: ["立即开启危险报警闪光灯", "将机动车移至不妨碍交通的地方停放", "在车后50-100米处设置警告标志", "高速公路上在车后150米外设置警告标志"], a: [0,1,2,3] },
+  { type: "multi", cat: "综合", q: "驾驶机动车通过铁路道口时，下列哪些做法是正确的？", options: ["提前减速", "不得超车", "不得掉头", "不得倒车"], a: [0,1,2,3] },
+  { type: "multi", cat: "综合", q: "驾驶机动车通过漫水桥时，下列哪些做法是正确的？", options: ["停车察明水情", "确认安全后低速通过", "中途不得停车", "高速通过"], a: [0,1,2] },
+
+  // ===== 更多安全行车 =====
+  { type: "judge", cat: "安全行车", q: "机动车通过铁路道口时，应当减速或者停车，在确认安全后通过。", a: true },
+  { type: "judge", cat: "安全行车", q: "机动车行经人行横道时，应当减速行驶。", a: true },
+  { type: "judge", cat: "安全行车", q: "机动车在没有限速标志的路段，应当保持安全车速。", a: true },
+  { type: "single", cat: "安全行车", q: "驾驶机动车在高速公路上行驶，与同车道前车的安全距离是多少？", options: ["保持50米以上", "保持100米以上", "车速100km/h以上时100米以上", "保持200米以上"], a: 2 },
+  { type: "single", cat: "安全行车", q: "机动车进入高速公路起点后，应当尽快将车速提高到每小时多少公里以上？", options: ["40公里", "50公里", "60公里", "80公里"], a: 2, tip: "加速车道提速到60km/h以上再驶入行车道。" },
+  { type: "single", cat: "安全行车", q: "驾驶机动车在高速公路上正常行驶时，最低车速不得低于每小时多少公里？", options: ["50公里", "60公里", "70公里", "80公里"], a: 1, tip: "高速公路最低限速60km/h。" },
+
+  // ===== 更多文明驾驶 =====
+  { type: "judge", cat: "文明驾驶", q: "驾驶机动车遇前方交通堵塞时，可以进入路口等候。", a: false, tip: "遇路口堵塞不得进入路口，应在停止线外等候。" },
+  { type: "single", cat: "文明驾驶", q: "驾驶机动车遇有前方交叉路口交通阻塞时，应当？", options: ["进入路口内等候", "依次停在路口以外等候", "从两侧绕行", "鸣喇叭催促"], a: 1 },
+  { type: "single", cat: "文明驾驶", q: "夜间会车时，应当在距对向来车多远时改用近光灯？", options: ["50米", "100米", "150米", "200米"], a: 2, tip: "夜间会车150米外改用近光灯。" },
+
+  // ===== 更多紧急避险 =====
+  { type: "judge", cat: "紧急避险", q: "机动车在高速公路上发生故障不能行驶时，车上人员应当迅速转移到右侧路肩外，并且迅速报警。", a: true },
+  { type: "judge", cat: "紧急避险", q: "车辆发生火灾时，应立即开启发动机罩进行灭火。", a: false, tip: "不可打开发动机罩，以免空气助燃。" },
+  { type: "single", cat: "紧急避险", q: "车辆落水后，驾驶人应当如何逃生？", options: ["立即打开车门", "待水浸满驾驶室后打开车门", "打碎车窗玻璃逃生", "保持镇静等待救援"], a: 1, tip: "等水浸满后内外水压平衡，才能打开车门。" },
+  { type: "multi", cat: "紧急避险", q: "机动车发生碰撞时，安全带的主要作用是？", options: ["减轻驾乘人员受伤程度", "固定驾乘人员位置", "防止被甩出车外", "减少碰撞冲击"], a: [0,1,2,3] },
+
+  // ===== 更多违法判断 =====
+  { type: "judge", cat: "违法判断", q: "驾驶机动车在高速公路上倒车、逆行、穿越中央分隔带掉头的，一次记12分。", a: true },
+  { type: "single", cat: "违法判断", q: "机动车驾驶人违反道路交通安全法律、法规关于道路通行规定的，处警告或者多少元罚款？", options: ["20元以上200元以下", "50元以上200元以下", "100元以上200元以下", "200元以上500元以下"], a: 0 },
+  { type: "multi", cat: "违法判断", q: "下列哪些情形不得超车？", options: ["前车正在左转弯、掉头、超车的", "与对面来车有会车可能的", "前车为执行紧急任务的警车、消防车、救护车、工程救险车的", "行经铁路道口、交叉路口、窄桥、弯道、陡坡、隧道、人行横道、市区交通流量大的路段等"], a: [0,1,2,3] },
+
+  // ===== 更多急救 =====
+  { type: "judge", cat: "急救危化", q: "移动脊柱骨折的伤员，切勿扶持伤者走动，可用软担架运送。", a: false, tip: "脊柱骨折必须用硬板担架，不可用软担架。" },
+  { type: "single", cat: "急救危化", q: "抢救失血伤员时，应先进行？", options: ["观察", "包扎", "止血", "询问"], a: 2 },
+  { type: "single", cat: "急救危化", q: "判断伤员有无意识的方法是？", options: ["轻拍伤员肩膀并呼喊", "按压人中", "检查瞳孔", "测量脉搏"], a: 0 },
+  { type: "multi", cat: "急救危化", q: "对烧伤伤员的现场急救，下列哪些做法是正确的？", options: ["迅速脱离热源", "用冷水冲洗伤处", "不要挑破水疱", "给伤员喝淡盐水"], a: [0,1,2,3] }
+];
+
+var QUIZ_SIZE = 20;
+var PASS_SCORE = 90;
+
+var body = document.getElementById("quizBody");
+var scorePill = document.getElementById("scorePill");
+var progressFill = document.getElementById("progressFill");
+var viewQuiz = document.getElementById("viewQuiz");
+var viewWrong = document.getElementById("viewWrong");
+var viewBrowse = document.getElementById("viewBrowse");
+var viewHelp = document.getElementById("viewHelp");
+var tabs = document.querySelectorAll(".tab");
+
+var order = [], qi = 0, picked = null, correct = 0, wrongList = [], wrongSet = {};
+
+try {
+  wrongSet = JSON.parse(localStorage.getItem("kemu4_wrong") || "{}");
+} catch (e) { wrongSet = {}; }
+
+function saveWrong() {
+  try { localStorage.setItem("kemu4_wrong", JSON.stringify(wrongSet)); } catch (e) {}
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function isCorrect(item) {
+  if (picked === null || picked === undefined) return false;
+  if (item.type === "multi") {
+    if (!Array.isArray(picked) || !Array.isArray(item.a)) return false;
+    if (picked.length !== item.a.length) return false;
+    return item.a.every(function (v) { return picked.indexOf(v) >= 0; });
+  }
+  return picked === item.a;
+}
+
+function answerText(item) {
+  if (item.type === "judge") return item.a ? "正确" : "错误";
+  if (item.type === "single") return String.fromCharCode(65 + item.a) + ". " + item.options[item.a];
+  return item.a.map(function (i) { return String.fromCharCode(65 + i); }).join("") + ". " + item.a.map(function (i) { return item.options[i]; }).join("；");
+}
+
+function updateMeta() {
+  scorePill.textContent = "答对 " + correct + " / " + Math.min(qi + 1, QUIZ_SIZE);
+  var done = Math.min(qi + (picked !== null ? 1 : 0), QUIZ_SIZE);
+  progressFill.style.width = (done / QUIZ_SIZE * 100) + "%";
+}
+
+function renderQuiz() {
+  var item = QUESTIONS[order[qi]];
+  var answered = picked !== null;
+  var isLast = qi >= QUIZ_SIZE - 1;
+  var typeTag = item.type === "judge" ? '<span class="q-tag tag-judge">判断</span>' : item.type === "single" ? '<span class="q-tag tag-single">单选</span>' : '<span class="q-tag tag-multi">多选</span>';
+  var html = '<div class="q-meta">第 ' + (qi + 1) + ' 题 / 共 ' + QUIZ_SIZE + ' 题 · ' + item.cat + '</div>' +
+    '<div class="q-text">' + typeTag + esc(item.q) + '</div>';
+  if (item.type === "judge") {
+    var opts = ["正确", "错误"];
+    for (var i = 0; i < 2; i++) {
+      var cls = "opt";
+      if (answered) {
+        if (i === (item.a ? 0 : 1)) cls += " correct";
+        else if (i === (picked ? 0 : 1)) cls += " wrong";
+      }
+      html += '<button type="button" class="' + cls + '" data-idx="' + i + '"' + (answered ? " disabled" : "") + '>' +
+        '<span class="circle">' + (i === 0 ? "√" : "×") + '</span><span>' + opts[i] + '</span></button>';
+    }
+  } else {
+    for (var i = 0; i < item.options.length; i++) {
+      var cls = "opt" + (item.type === "multi" ? " multi" : "");
+      if (answered) {
+        var isAns = item.a.indexOf(i) >= 0;
+        var isPicked = Array.isArray(picked) ? picked.indexOf(i) >= 0 : picked === i;
+        if (isAns) cls += " correct";
+        else if (isPicked) cls += " wrong";
+      }
+      html += '<button type="button" class="' + cls + '" data-idx="' + i + '"' + (answered ? " disabled" : "") + '>' +
+        '<span class="circle">' + String.fromCharCode(65 + i) + '</span><span>' + esc(item.options[i]) + '</span></button>';
+    }
+  }
+  html += '<div class="feedback" id="fb">';
+  if (!answered) {
+    html += '<span style="color:var(--text-muted)">' + (item.type === "multi" ? "多选题，点击所有正确选项后确认" : "点击选项作答") + '</span>';
+  } else {
+    var good = isCorrect(item);
+    html += '<div class="fb-line ' + (good ? "good" : "bad") + '">' + (good ? "回答正确" : "回答错误") + "</div>" +
+      '<div class="fb-op">正确答案：' + esc(answerText(item)) + "</div>";
+    if (item.tip) html += '<div class="fb-tip">' + esc(item.tip) + "</div>";
+  }
+  html += "</div>";
+  if (item.type === "multi" && !answered) {
+    html += '<button type="button" class="btn secondary" id="confirmBtn" ' + (Array.isArray(picked) && picked.length ? "" : "disabled") + '>确认答案</button>';
+  } else {
+    html += '<button type="button" class="btn" id="nextBtn" ' + (answered ? "" : "disabled") + '>' + (isLast ? "查看成绩" : "下一题") + "</button>";
+  }
+  body.innerHTML = html;
+  updateMeta();
+}
+
+function renderResult() {
+  progressFill.style.width = "100%";
+  var pass = correct >= PASS_SCORE / 100 * QUIZ_SIZE;
+  var html = '<div class="res-score ' + (pass ? "res-pass" : "res-fail") + '">' + correct + " / " + QUIZ_SIZE + "</div>" +
+    '<div class="res-grade">' + (pass ? "恭喜通过！科目四合格线为 " + PASS_SCORE + " 分" : "未通过，加油，把错题再练几遍") + "</div>";
+  if (wrongList.length) {
+    html += '<div class="res-sub">错题回顾（' + wrongList.length + "）</div>";
+    for (var i = 0; i < wrongList.length; i++) {
+      html += '<div class="wrow"><div class="wrow-q">' + esc(wrongList[i].q) + "</div>" +
+        '<div class="wrow-a"><b>正确答案：' + esc(wrongList[i].a) + "</b></div></div>";
+    }
+  } else {
+    html += '<div class="res-sub" style="text-align:center;padding:8px 0">本次全部答对，太棒了！</div>';
+  }
+  html += '<div class="btn-row" style="margin-top:12px"><button class="btn" id="restartBtn">再来一轮</button>' +
+    '<button class="btn secondary" id="wrongBtn">查看错题本</button></div>';
+  body.innerHTML = html;
+  updateMeta();
+}
+
+function startQuiz() {
+  order = shuffle(QUESTIONS.map(function (_, i) { return i; })).slice(0, QUIZ_SIZE);
+  qi = 0; picked = null; correct = 0; wrongList = [];
+  renderQuiz();
+}
+
+function renderWrong() {
+  var keys = Object.keys(wrongSet);
+  var html = '<div class="card"><div class="res-sub" style="margin-bottom:10px">错题本（共 ' + keys.length + " 题，来自练习记录）</div>";
+  if (!keys.length) { html += '<div class="empty">还没有错题记录，去模拟考试练练吧</div>'; }
+  else {
+    for (var i = 0; i < keys.length; i++) {
+      var item = wrongSet[keys[i]];
+      html += '<div class="wrow"><div class="wrow-q">' + esc(item.q) + "</div>" +
+        '<div class="wrow-a"><b>正确答案：' + esc(item.a) + "</b></div></div>";
+    }
+  }
+  html += '<button class="btn secondary" id="clearWrongBtn" style="margin-top:12px">清空错题本</button></div>';
+  viewWrong.innerHTML = html;
+}
+
+function renderBrowse() {
+  var cats = {};
+  for (var i = 0; i < QUESTIONS.length; i++) {
+    var c = QUESTIONS[i].cat;
+    if (!cats[c]) cats[c] = [];
+    cats[c].push(QUESTIONS[i]);
+  }
+  var html = '<div class="card"><div class="res-sub" style="margin-bottom:10px">题库（共 ' + QUESTIONS.length + " 题，按考点分类）</div>";
+  var cnames = Object.keys(cats);
+  for (var c = 0; c < cnames.length; c++) {
+    html += '<div class="cat-group"><h3>' + esc(cnames[c]) + "（" + cats[cnames[c]].length + "）</h3>";
+    for (var i = 0; i < cats[cnames[c]].length; i++) {
+      var item = cats[cnames[c]][i];
+      var at = answerText(item);
+      html += '<div class="q-item">' + esc(item.q) + '<div class="qa">答案：' + esc(at) + "</div></div>";
+    }
+    html += "</div>";
+  }
+  html += "</div>";
+  viewBrowse.innerHTML = html;
+}
+
+function renderHelp() {
+  var html = '<div class="card">' +
+    '<div class="res-sub">六大考点速记</div>' +
+    '<div class="cat-group"><h3>1. 安全行车常识</h3><div class="q-item">高速限速120，最低60；车距100m以上（车速100以上），50m以上（100以下）</div><div class="q-item">无中心线：城市30，公路40；有中心线：城市50，公路70</div><div class="q-item">故障车：普通路警告标志50-100m，高速150m外</div></div>' +
+    '<div class="cat-group"><h3>2. 文明驾驶常识</h3><div class="q-item">人行横道必须停车让行；遇堵塞依次排队不穿插</div><div class="q-item">夜间会车150米外改用近光灯</div></div>' +
+    '<div class="cat-group"><h3>3. 违法综合判断</h3><div class="q-item">酒驾：暂扣6个月驾照，罚款1000-2000</div><div class="q-item">醉驾：吊销驾照，追刑责，5年内不得重考</div><div class="q-item">记12分：准驾不符、酒驾、高速倒车逆行、遮挡号牌</div><div class="q-item">记6分：闯红灯、占应急车道、超速20%-50%</div></div>' +
+    '<div class="cat-group"><h3>4. 紧急情况避险</h3><div class="q-item">爆胎：握稳方向，缓慢减速，不可急刹</div><div class="q-item">侧滑：后轮侧滑同向打，前轮侧滑反向打</div><div class="q-item">车辆落水：等水浸满后再开门逃生</div></div>' +
+    '<div class="cat-group"><h3>5. 恶劣气候复杂道路</h3><div class="q-item">能见度<200m：限速60，车距100；<100m：限速40，车距50；<50m：限速20，驶离</div><div class="q-item">冰雪路限速30；雾天开雾灯+双闪</div><div class="q-item">下长坡用发动机制动，禁空挡滑行</div></div>' +
+    '<div class="cat-group"><h3>6. 伤员急救与危化品</h3><div class="q-item">中毒：先脱离有毒环境；失血：先止血再固定</div><div class="q-item">脊柱骨折：硬板担架，多人平托，禁软担架</div><div class="q-item">昏迷伤员：侧俯卧位，防窒息</div><div class="q-item">火药炸药属爆炸品；硫磺红磷属易燃固体</div></div>' +
+    '</div>';
+  viewHelp.innerHTML = html;
+}
+
+body.addEventListener("click", function (e) {
+  var opt = e.target.closest(".opt");
+  if (opt && !opt.disabled) {
+    var item = QUESTIONS[order[qi]];
+    var idx = parseInt(opt.getAttribute("data-idx"), 10);
+    if (item.type === "multi") {
+      if (!Array.isArray(picked)) picked = [];
+      var p = picked.indexOf(idx);
+      if (p >= 0) picked.splice(p, 1); else picked.push(idx);
+      var confirmBtn = document.getElementById("confirmBtn");
+      if (confirmBtn) confirmBtn.disabled = picked.length === 0;
+      opt.style.borderColor = picked.indexOf(idx) >= 0 ? "var(--brand)" : "var(--border)";
+      return;
+    }
+    picked = idx;
+    var good = picked === item.a;
+    if (good) correct++;
+    else { wrongList.push({ q: item.q, a: answerText(item) }); wrongSet[item.q] = { q: item.q, a: answerText(item) }; saveWrong(); }
+    renderQuiz();
+    return;
+  }
+  if (e.target.id === "confirmBtn") {
+    var item = QUESTIONS[order[qi]];
+    var good = isCorrect(item);
+    if (good) correct++;
+    else { wrongList.push({ q: item.q, a: answerText(item) }); wrongSet[item.q] = { q: item.q, a: answerText(item) }; saveWrong(); }
+    renderQuiz();
+    return;
+  }
+  if (e.target.id === "nextBtn" && picked !== null) {
+    if (qi < QUIZ_SIZE - 1) { qi++; picked = null; renderQuiz(); }
+    else renderResult();
+    return;
+  }
+  if (e.target.id === "restartBtn") { startQuiz(); switchTab("quiz"); return; }
+  if (e.target.id === "wrongBtn") { switchTab("wrong"); return; }
+  if (e.target.id === "clearWrongBtn") { wrongSet = {}; saveWrong(); renderWrong(); return; }
+});
+
+function switchTab(name) {
+  tabs.forEach(function (t) { t.classList.toggle("active", t.getAttribute("data-tab") === name); });
+  viewQuiz.classList.toggle("hidden", name !== "quiz");
+  viewWrong.classList.toggle("hidden", name !== "wrong");
+  viewBrowse.classList.toggle("hidden", name !== "browse");
+  viewHelp.classList.toggle("hidden", name !== "help");
+  if (name === "wrong") renderWrong();
+  if (name === "browse") renderBrowse();
+  if (name === "help") renderHelp();
+}
+
+tabs.forEach(function (t) {
+  t.addEventListener("click", function () { switchTab(t.getAttribute("data-tab")); });
+});
+
+startQuiz();
+</script>
+</body>
+</html>
