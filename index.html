@@ -153,8 +153,10 @@
     border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
   }
   .wrow-q { font-size: 14px; font-weight: 500; }
-  .wrow-a { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .wrow-a { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .wrow-a b { color: var(--success); }
+  .del-btn { border: none; background: transparent; color: var(--danger); font-size: 12px; cursor: pointer; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .del-btn:active { background: var(--danger-soft); }
 
   .cat-group { margin-bottom: 14px; }
   .cat-group h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
@@ -346,7 +348,8 @@ function renderWrong() {
     for (var i = 0; i < keys.length; i++) {
       var item = wrongSet[keys[i]];
       html += '<div class="wrow"><div class="wrow-q">' + esc(item.q) + "</div>" +
-        '<div class="wrow-a"><b>正确答案：' + esc(item.a) + "</b></div></div>";
+        '<div class="wrow-a"><b>正确答案：' + esc(item.a) + "</b>" +
+        '<button class="del-btn" data-del="' + esc(keys[i]) + '">删除</button></div></div>';
     }
   }
   html += '<button class="btn secondary" id="clearWrongBtn" style="margin-top:12px">清空错题本</button></div>';
@@ -388,7 +391,7 @@ function renderHelp() {
   viewHelp.innerHTML = html;
 }
 
-body.addEventListener("click", function (e) {
+document.addEventListener("click", function (e) {
   var opt = e.target.closest(".opt");
   if (opt && !opt.disabled) {
     var item = QUESTIONS[order[qi]];
@@ -425,6 +428,11 @@ body.addEventListener("click", function (e) {
   if (e.target.id === "restartBtn") { startQuiz(); switchTab("quiz"); return; }
   if (e.target.id === "wrongBtn") { switchTab("wrong"); return; }
   if (e.target.id === "clearWrongBtn") { wrongSet = {}; saveWrong(); renderWrong(); return; }
+  if (e.target.classList && e.target.classList.contains("del-btn")) {
+    var k = e.target.getAttribute("data-del");
+    if (k && wrongSet[k] !== undefined) { delete wrongSet[k]; saveWrong(); renderWrong(); }
+    return;
+  }
 });
 
 function switchTab(name) {
