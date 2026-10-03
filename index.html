@@ -247,7 +247,7 @@ function isCorrect(item) {
     if (picked.length !== item.a.length) return false;
     return item.a.every(function (v) { return picked.indexOf(v) >= 0; });
   }
-  return picked === item.a;
+  return item.type === "judge" ? ((picked === 0) === item.a) : (picked === item.a);
 }
 
 function answerText(item) {
@@ -275,7 +275,7 @@ function renderQuiz() {
       var cls = "opt";
       if (answered) {
         if (i === (item.a ? 0 : 1)) cls += " correct";
-        else if (i === (picked ? 0 : 1)) cls += " wrong";
+        else if (i === picked) cls += " wrong";
       }
       html += '<button type="button" class="' + cls + '" data-idx="' + i + '"' + (answered ? " disabled" : "") + '>' +
         '<span class="circle">' + (i === 0 ? "√" : "×") + '</span><span>' + opts[i] + '</span></button>';
@@ -284,7 +284,7 @@ function renderQuiz() {
     for (var i = 0; i < item.options.length; i++) {
       var cls = "opt" + (item.type === "multi" ? " multi" : "");
       if (answered) {
-        var isAns = item.a.indexOf(i) >= 0;
+        var isAns = item.type === "multi" ? item.a.indexOf(i) >= 0 : item.a === i;
         var isPicked = Array.isArray(picked) ? picked.indexOf(i) >= 0 : picked === i;
         if (isAns) cls += " correct";
         else if (isPicked) cls += " wrong";
@@ -403,7 +403,7 @@ body.addEventListener("click", function (e) {
       return;
     }
     picked = idx;
-    var good = picked === item.a;
+    var good = isCorrect(item);
     if (good) correct++;
     else { wrongList.push({ q: item.q, a: answerText(item) }); wrongSet[item.q] = { q: item.q, a: answerText(item) }; saveWrong(); }
     renderQuiz();
