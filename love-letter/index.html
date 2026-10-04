@@ -252,6 +252,47 @@
             animation: fadeIn 0.6s ease-out;
         }
 
+        /* 换一封按钮 */
+        .btn-refresh {
+            display: block;
+            margin: 28px auto 0;
+            padding: 10px 24px;
+            border: 1px dashed #d6336c;
+            background: rgba(255, 255, 255, 0.6);
+            color: #d6336c;
+            border-radius: 30px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-refresh:hover {
+            background: #d6336c;
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        .btn-refresh:active {
+            transform: scale(0.95);
+        }
+
+        /* 信件切换淡入动画 */
+        .letter.fade-in {
+            animation: letterFadeIn 0.6s ease-out;
+        }
+
+        @keyframes letterFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .success-overlay.active {
             display: flex;
         }
@@ -492,14 +533,10 @@
     <!-- 告白信主体 -->
     <div class="container">
         <div class="title-heart">💖</div>
-        <h1>致最可爱的你</h1>
+        <h1 id="letterTitle">致最可爱的你</h1>
 
-        <div class="letter">
-            <p>嘿，不知道你有没有发现，每次你不经意地笑起来，我的世界就亮了一整个下午。</p>
-            <p>遇见你之前，我以为喜欢一个人是轰轰烈烈的事；遇见你之后，我才知道，喜欢一个人是悄悄地、甜甜地、想把你藏进每一天里。</p>
-            <p>想和你一起看日出日落，想和你一起走过春夏秋冬，想在你难过时第一个抱住你，想在你开心时陪你笑得没心没肺。</p>
-            <p>余生很长，我不想和别人，只想和你，慢慢走。</p>
-            <p class="signature">—— 一个偷偷喜欢你很久的人</p>
+        <div class="letter" id="letterBody">
+            <!-- 由 JS 动态渲染 -->
         </div>
 
         <div class="question">那么，你愿意做我的女朋友吗？</div>
@@ -508,6 +545,11 @@
             <button class="btn btn-yes" id="btnYes" onclick="sayYes()">我愿意 ❤️</button>
             <button class="btn btn-no" id="btnNo" onclick="runAway(this)">不愿意</button>
         </div>
+
+        <!-- 换一封按钮 -->
+        <button class="btn-refresh" id="btnRefresh" onclick="loadRandomLetter()">
+            ✉️ 换一封告白信
+        </button>
     </div>
 
     <!-- 成功页面 -->
@@ -515,17 +557,148 @@
         <div class="success-content">
             <div class="success-heart">💗</div>
             <h2 class="success-title">太好了！</h2>
-            <p class="success-text">
-                从此以后，你就是我心里最重要的那一个人。<br>
-                我会牵着你的手，<br>
-                把所有的温柔和偏爱，都给你一个人。<br>
-                余生请多指教，我的女孩 💕
+            <p class="success-text" id="successText">
+                <!-- 由 JS 动态渲染 -->
             </p>
             <div style="font-size: 40px;">🥰</div>
         </div>
     </div>
 
     <script>
+        // ============ 告白文案库（每次访问随机选一封） ============
+        const letters = [
+            {
+                title: '致最可爱的你',
+                paragraphs: [
+                    '嘿，不知道你有没有发现，每次你不经意地笑起来，我的世界就亮了一整个下午。',
+                    '遇见你之前，我以为喜欢一个人是轰轰烈烈的事；遇见你之后，我才知道，喜欢一个人是悄悄地、甜甜地、想把你藏进每一天里。',
+                    '想和你一起看日出日落，想和你一起走过春夏秋冬，想在你难过时第一个抱住你，想在你开心时陪你笑得没心没肺。',
+                    '余生很长，我不想和别人，只想和你，慢慢走。'
+                ],
+                signature: '—— 一个偷偷喜欢你很久的人',
+                success: '从此以后，你就是我心里最重要的那一个人。<br>我会牵着你的手，<br>把所有的温柔和偏爱，都给你一个人。<br>余生请多指教，我的女孩 💕'
+            },
+            {
+                title: '写给我心动的理由',
+                paragraphs: [
+                    '我数过星星，数过晚风，数过无数个想你的夜晚，却始终数不清自己到底有多喜欢你。',
+                    '你的眼睛里有银河，你的笑里有春天，你说话时空气都变甜了，连风都忍不住偷听。',
+                    '我不擅长说情话，但我想用一辈子的早餐、晚饭、雨伞和外套，把"我喜欢你"四个字说上一万遍。',
+                    '如果可以，我想成为你疲惫时靠一下的肩膀，开心时第一个想分享的人。'
+                ],
+                signature: '—— 永远为你心动的我',
+                success: '谢谢你愿意走进我的世界。<br>从今往后，<br>你的快乐我来守护，<br>你的眼泪我来擦干。<br>我爱你，我的女孩 💕'
+            },
+            {
+                title: '一封迟到的告白',
+                paragraphs: [
+                    '喜欢你这件事，我藏了很久。藏在你回头时我假装看天的瞬间，藏在递给你水时多停留一秒的指尖，藏在每次借口找你却只想见你一面的心情里。',
+                    '有人说，喜欢是藏不住的。可我偏要藏，怕吓到你，怕失去现在还能靠近你的资格。',
+                    '但今天我不想藏了。比起害怕失去，我更怕永远都没有机会告诉你：你是我所有心动里，最认真的一次。',
+                    '如果余生是一本书，我希望封面上的人，是你。'
+                ],
+                signature: '—— 终于鼓起勇气的我',
+                success: '原来你也愿意。<br>这一刻，比我预想的还要美好。<br>以后的日子，<br>风里雨里，我都陪你。<br>我的女孩，余生多多指教 💕'
+            },
+            {
+                title: '关于我喜欢你这件事',
+                paragraphs: [
+                    '喜欢你，是从一个微小的瞬间开始的——也许是你说"早安"的语气，也许是你认真做事的侧脸，也许就是某天阳光刚好，你刚好在我身边。',
+                    '后来这个"喜欢"像春天的草，悄悄长满了我的整个心思。我看着消息列表等你回话，我重复听你提过的那首歌，我开始为你的笑而笑，为你的烦恼而皱眉。',
+                    '我不确定自己是不是最好的那个人，但我可以确定的是：我想把最好的自己，留给你。',
+                    '愿意让我成为那个，可以一直陪着你的人吗？'
+                ],
+                signature: '—— 想陪你的那个人',
+                success: '你说愿意的那一刻，<br>整个世界都亮了。<br>以后每个清晨和夜晚，<br>都有我为你守候。<br>我的女孩，我爱你 💕'
+            },
+            {
+                title: '宇宙级别的喜欢',
+                paragraphs: [
+                    '如果宇宙有尽头，我想到那里去看一眼，是不是真的有什么比喜欢你更辽阔的东西。可我知道，答案大概是没有。',
+                    '你笑一次，我开心三天；你回一条消息，我能反复读上十遍。这种幼稚又认真的喜欢，是我这辈子最舍不得丢掉的东西。',
+                    '我没有耀眼的承诺，只有朴素的愿望：和你一起吃很多顿饭，看很多次日落，过很多个四季。',
+                    '地球有 80 亿人，可我只想被你一个人偏爱。'
+                ],
+                signature: '—— 把整颗心都给你的我',
+                success: '宇宙级别的喜欢，<br>终于等到了你的回应。<br>从今天起，<br>我整个宇宙的中心，都是你。<br>我的女孩，我爱你 💕'
+            },
+            {
+                title: '想正式向你报到',
+                paragraphs: [
+                    '我叫什么名字你都知道，几岁哪里人你也都清楚。但今天，我想用一个新身份向你正式报到——那个，想成为你男朋友的人。',
+                    '我会的其实不多：会做几道家常菜，会修一点小电器，会在你冷的时候把手伸给你，会在你累的时候背你一段路。',
+                    '但我想为你学的还有很多：学怎么更懂你，学怎么让你笑得更多，学怎么把你放在心里最重要的位置，然后一辈子都不挪窝。',
+                    '请你给我一个机会，让我用行动把"我喜欢你"四个字，慢慢说一辈子。'
+                ],
+                signature: '—— 准备好一生的我',
+                success: '报到成功！<br>从今天起，<br>你的快乐是我的 KPI，<br>你的眼泪是我的头号大事。<br>我的女孩，请多多关照 💕'
+            },
+            {
+                title: '如果你也刚好喜欢我',
+                paragraphs: [
+                    '世界上最幸运的事，不是中彩票，不是捡到钱包，而是——我偷偷喜欢你的时候，你也刚好喜欢我。',
+                    '我不知道你是不是，但我至少想试一试。我不想用"如果当初"开头去回忆这件事，我想用"我们"开头去讲后面的故事。',
+                    '我会在你出门前叮嘱一句"路上小心"，会在你回家时留一盏灯，会在你做的每一件小事里，看见你想被看见的努力。',
+                    '如果你也刚好喜欢我，就让我知道好不好？'
+                ],
+                signature: '—— 等你回答的我',
+                success: '原来你也刚好喜欢我。<br>这是我能想到的，<br>最浪漫的巧合。<br>那就让我们，<br>把这份喜欢继续下去吧 💕'
+            },
+            {
+                title: '一封写了很多次的信',
+                paragraphs: [
+                    '这封信我写了很多次。删了又写，写了又删。我想说得浪漫一点，又怕显得不真诚；想说得直接一点，又怕吓到你。',
+                    '可后来我想通了：真心话不需要包装。所以，我就这么直白地告诉你——',
+                    '我喜欢你。喜欢你认真的样子，喜欢你偶尔撒娇的语气，喜欢你嘴硬心软，喜欢你生气时鼓起的脸颊。',
+                    '我不是一时兴起，是认真想了很久。我想要的不是一时心动，而是和你，从今往后的每一个明天。'
+                ],
+                signature: '—— 认真的我',
+                success: '我说的是认真的。<br>谢谢你也是认真的回答。<br>从这一刻开始，<br>我们一起，<br>把每一个明天过成永远 💕'
+            }
+        ];
+
+        // 当前文案索引（避免连续重复）
+        let currentLetterIndex = -1;
+
+        // 随机加载一封告白信
+        function loadRandomLetter() {
+            let newIndex;
+            // 避免与当前重复（文案数 ≥ 2 时）
+            do {
+                newIndex = Math.floor(Math.random() * letters.length);
+            } while (newIndex === currentLetterIndex && letters.length > 1);
+
+            currentLetterIndex = newIndex;
+            const letter = letters[newIndex];
+
+            // 渲染标题
+            document.getElementById('letterTitle').textContent = letter.title;
+
+            // 渲染信件正文
+            const body = document.getElementById('letterBody');
+            body.innerHTML = '';
+            letter.paragraphs.forEach(p => {
+                const pEl = document.createElement('p');
+                pEl.textContent = p;
+                body.appendChild(pEl);
+            });
+            const sig = document.createElement('p');
+            sig.className = 'signature';
+            sig.textContent = letter.signature;
+            body.appendChild(sig);
+
+            // 渲染成功页文案
+            document.getElementById('successText').innerHTML = letter.success;
+
+            // 触发淡入动画
+            body.classList.remove('fade-in');
+            void body.offsetWidth; // 触发重绘
+            body.classList.add('fade-in');
+        }
+
+        // 页面加载时随机选一封
+        loadRandomLetter();
+
         // 漂浮爱心动画
         const hearts = ['❤️', '💖', '💗', '💕', '💘', '🌹', '💝'];
         const floatingContainer = document.getElementById('floatingHearts');
