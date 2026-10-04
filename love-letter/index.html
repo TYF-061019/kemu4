@@ -758,7 +758,12 @@
         }
 
         // 愿意按钮点击逻辑
+        // ============ "未点愿意前无法退出" 锁定逻辑 ============
+        // unlocked=true 表示已点愿意，所有拦截解除
+        let unlocked = false;
+
         function sayYes() {
+            unlocked = true; // 点击愿意，解除所有拦截
             const overlay = document.getElementById('successOverlay');
             overlay.classList.add('active');
 
@@ -859,6 +864,115 @@
                 }
             }, 200);
         });
+
+        // ============ 退出拦截：未点愿意前不让走 ============
+
+        // 挽留提示文案（随机一句）
+        const retainMessages = [
+            '别走呀，我还没说完呢...',
+            '真的不再考虑一下吗？',
+            '你这样走，我会难过的',
+            '再听我说一句好不好？',
+            '点愿意嘛，人家在等你回答'
+        ];
+        function randomRetainMsg() {
+            return retainMessages[Math.floor(Math.random() * retainMessages.length)];
+        }
+
+        // 1) 关闭/刷新页面挽留（beforeunload 在桌面浏览器有效，移动端微信效果有限）
+        window.addEventListener('beforeunload', function(e) {
+            if (unlocked) return; // 已点愿意，放行
+            e.preventDefault();
+            e.returnValue = randomRetainMsg(); // 兼容 Chrome/Firefox
+            return e.returnValue;
+        });
+
+        // 2) pagehide / visibilitychange（移动端补充挽留）
+        document.addEventListener('visibilitychange', function() {
+            if (unlocked) return;
+            if (document.visibilityState === 'hidden') {
+                // 移动端切后台时，改个标题做温柔挽留
+                document.title = '别走嘛...';
+            } else {
+                document.title = '一封写给你的信';
+            }
+        });
+
+        // 3) 拦截浏览器后退（防止 PC 后退、微信 Android 物理返回离开页面）
+        // 通过反复 pushState 让"返回"始终停留在告白页
+        (function blockBack() {
+            // 推入若干条假历史记录
+            const fakeState = { _locked: true };
+            for (let i = 0; i < 5; i++) {
+                history.pushState(fakeState, '', location.href);
+            }
+            window.addEventListener('popstate', function(e) {
+                if (unlocked) return; // 已点愿意，允许正常后退
+                // 再次推入，保证"返回"始终走不出去
+                history.pushState(fakeState, '', location.href);
+                // 弹一个温柔挽留 toast
+                showRetainToast(randomRetainMsg());
+            });
+        })();
+
+        // 4) 拦截键盘快捷键：ESC / F5 / Ctrl+R / Ctrl+W / Ctrl+Shift+T / Alt+F4 等
+        document.addEventListener('keydown', function(e) {
+            if (unlocked) return;
+            const key = e.key;
+            // ESC
+            if (key === 'Escape') { e.preventDefault(); showRetainToast(randomRetainMsg()); return; }
+            // F5 / Ctrl+R / Cmd+R 刷新
+            if (key === 'F5' || (e.ctrlKey && /r/i.test(key)) || (e.metaKey && /r/i.test(key))) {
+                e.preventDefault(); showRetainToast('别走呀，再看看我嘛...'); return;
+            }
+            // Ctrl+W / Cmd+W 关闭标签（部分浏览器会拦截，仅做尽力阻止）
+            if ((e.ctrlKey || e.metaKey) && /w/i.test(key)) {
+                e.preventDefault(); showRetainToast('再陪我一分钟好不好？'); return;
+            }
+            // Alt+F4 / Ctrl+Shift+W
+            if (e.altKey && e.key === 'F4') { e.preventDefault(); showRetainToast('别关掉我嘛...'); return; }
+        });
+
+        // 挽留 toast 提示（页内温柔挽留，不打断体验）
+        let retainTimer;
+        function showRetainToast(msg) {
+            let toast = document.getElementById('retainToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'retainToast';
+                toast.style.cssText = [
+                    'position:fixed',
+                    'top:30px',
+                    'left:50%',
+                    'transform:translateX(-50%)',
+                    'background:linear-gradient(135deg,#ff4d6d,#ff8fa3)',
+                    'color:#fff',
+                    'padding:12px 24px',
+                    'border-radius:30px',
+                    'box-shadow:0 8px 25px rgba(255,77,109,0.4)',
+                    'font-size:14px',
+                    'z-index:200',
+                    'opacity:0',
+                    'transition:opacity 0.3s ease, transform 0.3s ease',
+                    'pointer-events:none',
+                    'max-width:90vw',
+                    'text-align:center'
+                ].join(';');
+                document.body.appendChild(toast);
+            }
+            toast.textContent = '💕 ' + msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            clearTimeout(retainTimer);
+            retainTimer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-10px)';
+            }, 2000);
+        }
+
+        // 5) 微信 iOS / Android 顶部"关闭/返回"按钮无法被 JS 拦截——
+        //    那是微信原生 UI，浏览器层无权干涉。但顶部按钮一般只会回到前一页或关闭 WebView，
+        //    我们已通过 history 拦截保证"返回"停在告白页。
     </script>
 </body>
 </html>
