@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>像素游戏盒</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#0e0e1a;color:#e8e8f0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center}
+body{padding:24px;background-image:radial-gradient(circle at 20% 20%,#2a1a3e 0%,transparent 40%),radial-gradient(circle at 80% 80%,#1a2e3e 0%,transparent 40%)}
+h1{font-size:28px;letter-spacing:6px;margin-bottom:6px;text-shadow:2px 2px 0 #ff6b9d,4px 4px 0 #6b9dff}
+.sub{color:#8a8aa0;font-size:13px;margin-bottom:36px;letter-spacing:2px}
+.card{width:100%;max-width:420px;background:#1a1a2e;border:3px solid #3a3a5e;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 6px 0 #0a0a14;cursor:pointer;text-decoration:none;color:inherit;display:block}
+.card:active{transform:translateY(3px);box-shadow:0 3px 0 #0a0a14}
+.card-title{font-size:20px;font-weight:bold;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.tag{font-size:11px;padding:3px 8px;border-radius:4px}
+.tag1{background:#ff6b9d;color:#1a1a2e}.tag2{background:#6b9dff;color:#1a1a2e}
+.card-desc{font-size:13px;color:#b0b0c8;line-height:1.6}
+.play{margin-top:12px;display:inline-block;background:#ffd93d;color:#1a1a2e;padding:8px 18px;border-radius:8px;font-weight:bold;font-size:14px;box-shadow:0 3px 0 #c9a500}
+.footer{margin-top:24px;color:#5a5a78;font-size:11px;text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+<h1>像素游戏盒</h1>
+<div class="sub">PIXEL GAME BOX</div>
+<a href="fading.html" class="card">
+<div class="card-title"><span class="tag tag1">Roguelike</span>褪色 · FADING</div>
+<div class="card-desc">世界的像素正在风化消失，在画面褪色成虚无之前，找到出口。收集墨水延缓褪色，穿越3层消逝的地牢。</div>
+<span class="play">▶ 开始游戏</span>
+</a>
+<a href="1bit-post.html" class="card">
+<div class="card-title"><span class="tag tag2">解谜</span>1Bit邮局 · POST</div>
+<div class="card-desc">黑白小镇的邮差。根据信上的线索，把信送到正确的人家。每送对一封，世界就多一种颜色。</div>
+<span class="play">▶ 开始游戏</span>
+</a>
+<div class="footer">建议在手机微信中打开<br>触屏操作 · 无需安装</div>
+</body>
+</html>
