@@ -6,7 +6,7 @@
 <title>像素游戏盒</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:#0e0e1a;color:#e8e8f0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center}
+html,body{height:100%;background:#0e0e1a;color:#e8e8f0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow-y:auto;overflow-x:hidden;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center}
 body{padding:24px;background-image:radial-gradient(circle at 20% 20%,#2a1a3e 0%,transparent 40%),radial-gradient(circle at 80% 80%,#1a2e3e 0%,transparent 40%)}
 h1{font-size:28px;letter-spacing:6px;margin-bottom:6px;text-shadow:2px 2px 0 #ff6b9d,4px 4px 0 #6b9dff}
 .sub{color:#8a8aa0;font-size:13px;margin-bottom:36px;letter-spacing:2px}
@@ -14,7 +14,9 @@ h1{font-size:28px;letter-spacing:6px;margin-bottom:6px;text-shadow:2px 2px 0 #ff
 .card:active{transform:translateY(3px);box-shadow:0 3px 0 #0a0a14}
 .card-title{font-size:20px;font-weight:bold;margin-bottom:6px;display:flex;align-items:center;gap:10px}
 .tag{font-size:11px;padding:3px 8px;border-radius:4px}
-.tag1{background:#ff6b9d;color:#1a1a2e}.tag2{background:#6b9dff;color:#1a1a2e}
+.tag1{background:#ff6b9d;color:#1a1a2e}
+.tag2{background:#6b9dff;color:#1a1a2e}
+.tag3{background:#6bd96b;color:#1a1a2e}
 .card-desc{font-size:13px;color:#b0b0c8;line-height:1.6}
 .play{margin-top:12px;display:inline-block;background:#ffd93d;color:#1a1a2e;padding:8px 18px;border-radius:8px;font-weight:bold;font-size:14px;box-shadow:0 3px 0 #c9a500}
 .footer{margin-top:24px;color:#5a5a78;font-size:11px;text-align:center;line-height:1.8}
@@ -31,6 +33,11 @@ h1{font-size:28px;letter-spacing:6px;margin-bottom:6px;text-shadow:2px 2px 0 #ff
 <a href="1bit-post.html" class="card">
 <div class="card-title"><span class="tag tag2">解谜</span>1Bit邮局 · POST</div>
 <div class="card-desc">黑白小镇的邮差。根据信上的线索，把信送到正确的人家。每送对一封，世界就多一种颜色。</div>
+<span class="play">▶ 开始游戏</span>
+</a>
+<a href="tetris.html" class="card">
+<div class="card-title"><span class="tag tag3">经典</span>俄罗斯方块 · TETRIS</div>
+<div class="card-desc">经典像素俄罗斯方块。7种方块、消行计分、等级加速，带幽灵预览和下一块提示，触屏即可畅玩。</div>
 <span class="play">▶ 开始游戏</span>
 </a>
 <div class="footer">建议在手机微信中打开<br>触屏操作 · 无需安装</div>
