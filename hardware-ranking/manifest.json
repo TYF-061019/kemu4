@@ -1,0 +1,1 @@
+{"name":"硬件性能排行榜","short_name":"硬件排行","description":"手机/芯片/CPU/GPU性能排行榜","start_url":"./","display":"standalone","background_color":"#6366f1","theme_color":"#6366f1","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}],"shortcuts":[{"name":"手机性能","url":"./?tab=phone"},{"name":"CPU排行","url":"./?tab=cpu"}]}

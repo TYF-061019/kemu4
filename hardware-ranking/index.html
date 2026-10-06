@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#6366f1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="硬件排行">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>硬件性能排行榜</title>
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--border:#e5e5e5;--text:#1a1a1a;--muted:#86868b;--brand:#6366f1;--brand-soft:#eef2ff;--gold:#f59e0b;--silver:#94a3b8;--bronze:#b45309}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px;padding-bottom:70px}
+header{color:#fff;padding:18px 16px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(99,102,241,.3)}
+header.phone{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+header.soc{background:linear-gradient(135deg,#0ea5e9,#06b6d4)}
+header.cpu{background:linear-gradient(135deg,#10b981,#14b8a6)}
+header.gpu{background:linear-gradient(135deg,#ef4444,#f97316)}
+header h1{font-size:18px;font-weight:700}
+header p{font-size:12px;opacity:.9;margin-top:2px}
+.toolbar{display:flex;gap:8px;padding:12px 16px;position:sticky;top:64px;background:var(--bg);z-index:99}
+.toolbar input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff}
+.toolbar select,.toolbar button{padding:10px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:#fff;color:var(--text);cursor:pointer}
+.tabs{display:flex;gap:6px;padding:0 16px 8px;overflow-x:auto;white-space:nowrap}
+.tab{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:#fff;font-size:12px;color:var(--muted);cursor:pointer;flex-shrink:0}
+.tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.list{padding:0 16px}
+.item{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid var(--border);cursor:pointer}
+.item .row1{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rank{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;color:#fff}
+.rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.rank-2{background:linear-gradient(135deg,#94a3b8,#64748b)}
+.rank-3{background:linear-gradient(135deg,#f97316,#b45309)}
+.rank-other{background:var(--brand)}
+.item .info{flex:1;min-width:0}
+.item .name{font-weight:600;font-size:15px}
+.item .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.item .score{font-weight:700;font-size:16px;color:var(--brand);text-align:right;flex-shrink:0}
+.item .score small{display:block;font-size:10px;color:var(--muted);font-weight:400}
+.item .tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tag{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:500}
+.tag-1{background:var(--brand-soft);color:var(--brand)}
+.tag-2{background:#fef3c7;color:#92400e}
+.tag-3{background:#dbeafe;color:#1e40af}
+.detail{display:none;padding:12px;background:#fafafa;border-radius:10px;margin-top:10px;font-size:13px}
+.detail.show{display:block}
+.detail .d-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee}
+.detail .d-row:last-child{border:none}
+.detail .d-label{color:var(--muted)}
+.detail .d-val{font-weight:500;text-align:right;max-width:65%}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
+.nav-item{flex:1;text-align:center;padding:8px 0;cursor:pointer;color:var(--muted);font-size:11px}
+.nav-item.active{color:var(--brand)}
+.nav-item .icon{font-size:22px;display:block;margin-bottom:2px}
+.install-hint{position:fixed;bottom:80px;left:16px;right:16px;background:rgba(0,0,0,.8);color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;text-align:center;display:none;z-index:1000}
+</style>
+</head>
+<body>
+<header id="header" class="phone">
+  <h1 id="title">📱 手机性能排行榜</h1>
+  <p id="subtitle">2026 主流旗舰 · 安兔兔跑分排名</p>
+</header>
+<div class="toolbar" id="toolbar">
+  <input id="search" placeholder="搜索型号或品牌...">
+  <select id="filter" style="display:none"></select>
+  <button id="refreshBtn" title="刷新数据">🔄</button>
+</div>
+<div class="tabs" id="tabs"></div>
+<div class="list" id="list"><div style="text-align:center;color:var(--muted);padding:40px">加载中...</div></div>
+<div class="install-hint" id="installHint">点浏览器菜单「添加到桌面」可安装为APP</div>
+<nav class="bottom-nav">
+  <div class="nav-item active" data-tab="phone"><span class="icon">📱</span>手机</div>
+  <div class="nav-item" data-tab="soc"><span class="icon">🔬</span>芯片</div>
+  <div class="nav-item" data-tab="cpu"><span class="icon">💻</span>CPU</div>
+  <div class="nav-item" data-tab="gpu"><span class="icon">🎮</span>显卡</div>
+</nav>
+
+<script>
+const BASE='https://tyf-061019.github.io/kemu4';
+const CONFIG={
+  phone:{title:'📱 手机性能排行榜',scoreKey:'antutu',scoreLabel:'安兔兔跑分',dataUrl:BASE+'/phone-ranking/data/phones.json',arrKey:'phones',cacheKey:'hw_phone_v1',searchPh:'搜索手机型号或品牌...',brandFilter:true,priceFilter:true},
+  soc:{title:'🔬 手机芯片排行榜',scoreKey:'antutuAI',scoreLabel:'AI跑分',dataUrl:BASE+'/phone-soc/data/socs.json',arrKey:'socs',cacheKey:'hw_soc_v1',searchPh:'搜索芯片型号或厂商...',brandFilter:false,priceFilter:false},
+  cpu:{title:'💻 电脑CPU排行榜',scoreKey:'r23Multi',scoreLabel:'R23多核',dataUrl:BASE+'/pc-cpu/data/cpus.json',arrKey:'cpus',cacheKey:'hw_cpu_v1',searchPh:'搜索CPU型号或厂商...',brandFilter:false,priceFilter:false,sortTabs:[{k:'r23Multi',l:'R23多核'},{k:'r23Single',l:'R23单核'},{k:'gb6Multi',l:'GB6多核'}]},
+  gpu:{title:'🎮 电脑显卡排行榜',scoreKey:'timeSpy',scoreLabel:'Time Spy',dataUrl:BASE+'/pc-gpu/data/gpus.json',arrKey:'gpus',cacheKey:'hw_gpu_v1',searchPh:'搜索显卡型号或厂商...',brandFilter:false,priceFilter:false,sortTabs:[{k:'timeSpy',l:'Time Spy'},{k:'tsGraphics',l:'TS图形分'},{k:'portRoyal',l:'光追'}]}
+};
+
+let curTab='phone';
+let data={phone:[],soc:[],cpu:[],gpu:[]};
+let updated={};
+let sortKey={};
+let activePrice={phone:'all'};
+
+const $=id=>document.getElementById(id);
+const header=$('header'),title=$('title'),subtitle=$('subtitle'),list=$('list'),search=$('search'),filter=$('filter'),tabs=$('tabs'),refreshBtn=$('refreshBtn');
+
+function rankClass(i){return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}
+function fmt(n){return n>=10000?(n/10000).toFixed(1)+'万':(n||0).toLocaleString()}
+
+function renderTabs(){
+  const cfg=CONFIG[curTab];
+  if(cfg.sortTabs){
+    tabs.innerHTML=cfg.sortTabs.map(t=>`<button class="tab ${sortKey[curTab]===t.k?'active':''}" data-k="${t.k}">${t.l}</button>`).join('');
+    tabs.style.display='flex';
+  }else if(cfg.priceFilter){
+    tabs.innerHTML=['全部','3000以下','3000-5000','5000-8000','8000以上'].map((p,i)=>{
+      const v=['all','0-3000','3000-5000','5000-8000','8000'][i];
+      return `<button class="tab ${activePrice[curTab]===v?'active':''}" data-price="${v}">${p}</button>`;
+    }).join('');
+    tabs.style.display='flex';
+  }else{tabs.innerHTML='';tabs.style.display='none'}
+}
+
+function render(){
+  const cfg=CONFIG[curTab];
+  const arr=data[curTab];
+  if(!arr||arr.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">暂无数据，请检查网络后刷新</div>';return}
+  const kw=search.value.trim().toLowerCase();
+  const bf=filter.value;
+  const sk=sortKey[curTab]||cfg.scoreKey;
+  let filtered=arr.filter(item=>{
+    const m1=!kw||item.name.toLowerCase().includes(kw)||(item.brand||'').toLowerCase().includes(kw)||(item.processor||'').toLowerCase().includes(kw);
+    const m2=!bf||item.brand===bf;
+    let m3=true;
+    if(cfg.priceFilter&&activePrice[curTab]!=='all'){
+      const p=activePrice[curTab];
+      if(p==='0-3000')m3=item.price<3000;
+      else if(p==='3000-5000')m3=item.price>=3000&&item.price<5000;
+      else if(p==='5000-8000')m3=item.price>=5000&&item.price<8000;
+      else m3=item.price>=8000;
+    }
+    return m1&&m2&&m3;
+  }).sort((a,b)=>(b[sk]||0)-(a[sk]||0));
+
+  if(filtered.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">未找到匹配的结果</div>';return}
+
+  list.innerHTML=filtered.map((it,i)=>{
+    const c=curTab;
+    let sub='',t1='',t2='',t3='',detail='';
+    if(c==='phone'){
+      sub=`${it.processor||''} · ${it.ram||''}`;
+      t1=(it.processor||'').split(' ')[0];t2=it.ram||'';t3='¥'+it.price+'起';
+      detail=`<div class="d-row"><span class="d-label">处理器</span><span class="d-val">${it.processor||'-'}</span></div>
+        <div class="d-row"><span class="d-label">内存</span><span class="d-val">${it.ram||'-'}</span></div>
+        <div class="d-row"><span class="d-label">存储</span><span class="d-val">${it.storage||'-'}</span></div>
+        <div class="d-row"><span class="d-label">屏幕</span><span class="d-val">${it.screen||'-'}</span></div>
+        <div class="d-row"><span class="d-label">电池</span><span class="d-val">${it.battery||'-'}</span></div>
+        <div class="d-row"><span class="d-label">摄像头</span><span class="d-val">${it.camera||'-'}</span></div>
+        <div class="d-row"><span class="d-label">GB6单核</span><span class="d-val">${fmt(it.gb6Single)}</span></div>
+        <div class="d-row"><span class="d-label">GB6多核</span><span class="d-val">${fmt(it.gb6Multi)}</span></div>
+        <div class="d-row"><span class="d-label">起售价</span><span class="d-val" style="color:#dc2626;font-weight:700">¥${it.price}</span></div>
+        ${it.note?`<div class="d-row"><span class="d-label">简评</span><span class="d-val">${it.note}</span></div>`:''}`;
+    }else if(c==='soc'){
+      sub=`${it.brand||''} · ${it.process||''}工艺`;
+      t1=it.brand||'';t2=it.process||'';t3=(it.gpu||'').split(' ')[0];
+      detail=`<div class="d-row"><span class="d-label">厂商</span><span class="d-val">${it.brand||'-'}</span></div>
+        <div class="d-row"><span class="d-label">CPU架构</span><span class="d-val">${it.cpu||'-'}</span></div>
+        <div class="d-row"><span class="d-label">GPU</span><span class="d-val">${it.gpu||'-'}</span></div>
+        <div class="d-row"><span class="d-label">制程工艺</span><span class="d-val">${it.process||'-'}</span></div>
+        <div class="d-row"><span class="d-label">GB6单核</span><span class="d-val">${fmt(it.gb6Single)}</span></div>
+        <div class="d-row"><span class="d-label">GB6多核</span><span class="d-val">${fmt(it.gb6Multi)}</span></div>
+        ${it.note?`<div class="d-row"><span class="d-label">简评</span><span class="d-val">${it.note}</span></div>`:''}`;
+    }else if(c==='cpu'){
+      sub=`${it.cores||'-'} · ${it.socket||''}`;
+      t1=it.brand||'';t2=it.cores||'';t3=it.tdp||'';
+      detail=`<div class="d-row"><span class="d-label">厂商</span><span class="d-val">${it.brand||'-'}</span></div>
+        <div class="d-row"><span class="d-label">核心/线程</span><span class="d-val">${it.cores||'-'}</span></div>
+        <div class="d-row"><span class="d-label">基础频率</span><span class="d-val">${it.base||'-'}</span></div>
+        <div class="d-row"><span class="d-label">睿频频率</span><span class="d-val">${it.boost||'-'}</span></div>
+        <div class="d-row"><span class="d-label">TDP功耗</span><span class="d-val">${it.tdp||'-'}</span></div>
+        <div class="d-row"><span class="d-label">三级缓存</span><span class="d-val">${it.cache||'-'}</span></div>
+        <div class="d-row"><span class="d-label">接口</span><span class="d-val">${it.socket||'-'}</span></div>
+        <div class="d-row"><span class="d-label">R23多核</span><span class="d-val">${fmt(it.r23Multi)}</span></div>
+        <div class="d-row"><span class="d-label">R23单核</span><span class="d-val">${fmt(it.r23Single)}</span></div>
+        <div class="d-row"><span class="d-label">GB6多核</span><span class="d-val">${fmt(it.gb6Multi)}</span></div>
+        <div class="d-row"><span class="d-label">参考价</span><span class="d-val" style="color:#dc2626;font-weight:700">¥${it.price||'-'}</span></div>
+        ${it.note?`<div class="d-row"><span class="d-label">简评</span><span class="d-val">${it.note}</span></div>`:''}`;
+    }else if(c==='gpu'){
+      sub=`${it.memory||'-'} · ${(it.core||'').split(' ')[0]}核心`;
+      t1=it.brand||'';t2=it.memory||'';t3=it.tdp||'';
+      detail=`<div class="d-row"><span class="d-label">厂商</span><span class="d-val">${it.brand||'-'}</span></div>
+        <div class="d-row"><span class="d-label">显存</span><span class="d-val">${it.memory||'-'}</span></div>
+        <div class="d-row"><span class="d-label">核心</span><span class="d-val">${it.core||'-'}</span></div>
+        <div class="d-row"><span class="d-label">加速频率</span><span class="d-val">${it.boost||'-'}</span></div>
+        <div class="d-row"><span class="d-label">TDP功耗</span><span class="d-val">${it.tdp||'-'}</span></div>
+        <div class="d-row"><span class="d-label">总线接口</span><span class="d-val">${it.interface||'-'}</span></div>
+        <div class="d-row"><span class="d-label">Time Spy</span><span class="d-val">${fmt(it.timeSpy)}</span></div>
+        <div class="d-row"><span class="d-label">TS图形分</span><span class="d-val">${fmt(it.tsGraphics)}</span></div>
+        <div class="d-row"><span class="d-label">Port Royal光追</span><span class="d-val">${fmt(it.portRoyal)}</span></div>
+        <div class="d-row"><span class="d-label">参考价</span><span class="d-val" style="color:#dc2626;font-weight:700">¥${it.price||'-'}</span></div>
+        ${it.note?`<div class="d-row"><span class="d-label">简评</span><span class="d-val">${it.note}</span></div>`:''}`;
+    }
+    const sl=cfg.sortTabs?cfg.sortTabs.find(t=>t.k===sk)?.l:cfg.scoreLabel;
+    return `<div class="item" onclick="document.getElementById('d-${c}-${i}').classList.toggle('show')">
+      <div class="row1">
+        <div class="rank ${rankClass(i)}">${i+1}</div>
+        <div class="info"><div class="name">${it.name}</div><div class="sub">${sub}</div></div>
+        <div class="score">${fmt(it[sk]||0)}<small>${sl}</small></div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-1">${t1}</span>
+        <span class="tag tag-2">${t2}</span>
+        <span class="tag tag-3">${t3}</span>
+      </div>
+      <div class="detail" id="d-${c}-${i}">${detail}</div>
+    </div>`;
+  }).join('');
+}
+
+async function loadData(tab,force=false){
+  const cfg=CONFIG[tab];
+  if(!force){
+    try{
+      const cached=localStorage.getItem(cfg.cacheKey);
+      if(cached){
+        const d=JSON.parse(cached);
+        data[tab]=d[cfg.arrKey]||[];
+        updated[tab]=d.updated;
+        if(tab===curTab)updateHeader();
+        return;
+      }
+    }catch(e){}
+  }
+  if(tab===curTab)list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">正在联网获取最新数据...</div>';
+  try{
+    const res=await fetch(cfg.dataUrl+'?t='+Date.now());
+    const d=await res.json();
+    data[tab]=d[cfg.arrKey]||[];
+    updated[tab]=d.updated;
+    localStorage.setItem(cfg.cacheKey,JSON.stringify(d));
+    if(tab===curTab){updateHeader();if(cfg.brandFilter)buildBrandFilter();render()}
+  }catch(e){
+    try{
+      const cached=localStorage.getItem(cfg.cacheKey);
+      if(cached){
+        const d=JSON.parse(cached);
+        data[tab]=d[cfg.arrKey]||[];
+        updated[tab]=d.updated;
+        if(tab===curTab)updateHeader();
+      }
+    }catch(_){}
+  }
+}
+
+function buildBrandFilter(){
+  const cfg=CONFIG[curTab];
+  if(!cfg.brandFilter){filter.style.display='none';return}
+  const brands=[...new Set(data[curTab].map(p=>p.brand))];
+  filter.innerHTML='<option value="">全部品牌</option>'+brands.map(b=>`<option value="${b}">${b}</option>`).join('');
+  filter.style.display='';
+}
+
+function updateHeader(){
+  const cfg=CONFIG[curTab];
+  header.className=curTab;
+  title.textContent=cfg.title;
+  const u=updated[curTab];
+  subtitle.textContent=u?`数据更新于 ${u} · 点击🔄刷新`:`点击🔄获取最新数据`;
+}
+
+function switchTab(tab){
+  curTab=tab;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.tab===tab));
+  search.value='';filter.value='';
+  search.placeholder=CONFIG[tab].searchPh;
+  const cfg=CONFIG[tab];
+  if(!sortKey[tab])sortKey[tab]=cfg.scoreKey;
+  if(!activePrice[tab])activePrice[tab]='all';
+  updateHeader();
+  renderTabs();
+  buildBrandFilter();
+  if(data[tab].length>0)render();
+  else loadData(tab);
+}
+
+// 事件绑定
+search.addEventListener('input',render);
+filter.addEventListener('change',render);
+refreshBtn.addEventListener('click',()=>loadData(curTab,true));
+tabs.addEventListener('click',e=>{
+  if(e.target.dataset.k){sortKey[curTab]=e.target.dataset.k;renderTabs();render()}
+  if(e.target.dataset.price){activePrice[curTab]=e.target.dataset.price;renderTabs();render()}
+});
+document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>switchTab(n.dataset.tab)));
+
+// 初始化
+sortKey.cpu='r23Multi';sortKey.gpu='timeSpy';
+loadData('phone');
+['soc','cpu','gpu'].forEach(t=>loadData(t));
+
+// PWA
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
