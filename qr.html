@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>流星雨祝福 · 扫码打开</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0b0b2a 0%, #1a1140 50%, #2d1b5e 100%);
+    color: #fff;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    padding: 30px 20px;
+  }
+  .card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 24px;
+    padding: 40px 30px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+    background: linear-gradient(180deg, #fff, #b8c8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: rgba(200,210,255,0.7);
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+  }
+  .qr-wrap {
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+    display: inline-block;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 30px rgba(120,100,255,0.3);
+  }
+  .qr-wrap img {
+    width: 240px;
+    height: 240px;
+    display: block;
+  }
+  .tip {
+    font-size: 14px;
+    color: rgba(200,210,255,0.85);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .link-box {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .link-text {
+    flex: 1;
+    font-size: 12px;
+    color: rgba(200,210,255,0.8);
+    word-break: break-all;
+    text-align: left;
+    line-height: 1.4;
+  }
+  .copy-btn {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #6a8bff, #a855f7);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .copy-btn:active { transform: scale(0.92); }
+  .open-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #6a8bff 0%, #a855f7 100%);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 6px 20px rgba(120,100,255,0.4);
+    transition: transform 0.15s;
+  }
+  .open-btn:active { transform: scale(0.97); }
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .star {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle 3s infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="card">
+    <h1>流星雨</h1>
+    <p class="subtitle">写下你的祝福 · 化作流星划过夜空</p>
+    <div class="qr-wrap">
+      <img src="meteor-blessing-qr.png" alt="流星雨祝福二维码" id="qrImg">
+    </div>
+    <p class="tip">使用微信「扫一扫」扫描上方二维码<br>即可打开流星雨祝福页面</p>
+    <div class="link-box">
+      <span class="link-text" id="linkText">https://tyf-061019.github.io/kemu4/meteor-blessing.html</span>
+      <button class="copy-btn" onclick="copyLink()">复制</button>
+    </div>
+    <a class="open-btn" href="https://tyf-061019.github.io/kemu4/meteor-blessing.html" target="_blank">立即打开页面 →</a>
+  </div>
+
+<script>
+  // 生成背景星星
+  const starsContainer = document.getElementById('stars');
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.animationDelay = Math.random() * 3 + 's';
+    s.style.opacity = Math.random() * 0.7 + 0.3;
+    starsContainer.appendChild(s);
+  }
+  function copyLink() {
+    const text = document.getElementById('linkText').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '已复制';
+      setTimeout(() => btn.textContent = '复制', 1500);
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '已复制';
+      setTimeout(() => btn.textContent = '复制', 1500);
+    });
+  }
+</script>
+</body>
+</html>
