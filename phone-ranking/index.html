@@ -53,11 +53,12 @@ header p{font-size:12px;opacity:.85;margin-top:2px}
 <body>
 <header>
   <h1>📱 手机性能排行榜</h1>
-  <p>2024-2025 主流旗舰 · 安兔兔跑分排名</p>
+  <p id="subtitle">2026 主流旗舰 · 安兔兔跑分排名</p>
 </header>
 <div class="toolbar">
   <input id="search" placeholder="搜索手机型号或品牌...">
   <select id="brandFilter"><option value="">全部品牌</option></select>
+  <button id="refreshBtn" title="刷新数据" style="padding:0 14px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:18px">🔄</button>
 </div>
 <div class="toolbar" style="top:64px;overflow-x:auto;white-space:nowrap" id="priceFilter">
   <button class="filter-btn active" data-price="all">全部价位</button>
@@ -66,49 +67,28 @@ header p{font-size:12px;opacity:.85;margin-top:2px}
   <button class="filter-btn" data-price="5000-8000">5000-8000</button>
   <button class="filter-btn" data-price="8000">8000以上</button>
 </div>
-<div class="list" id="list"></div>
+<div class="list" id="list"><div style="text-align:center;color:var(--muted);padding:40px">加载中...</div></div>
 <div class="install-hint" id="installHint">点浏览器菜单「添加到桌面」可安装为APP</div>
 
 <script>
-const PHONES=[
-{name:"iPhone 16 Pro Max",brand:"苹果",soc:"Apple A18 Pro",antutu:2100000,gb6cpu:3300,gb6gpu:5100,ram:"8GB",storage:"256GB-1TB",display:"6.9英寸 LTPO OLED 120Hz",battery:"4685mAh",camera:"4800万主摄+4800万长焦+1200万超广角",price:9999,release:"2024-09"},
-{name:"iPhone 16 Pro",brand:"苹果",soc:"Apple A18 Pro",antutu:1950000,gb6cpu:3300,gb6gpu:5100,ram:"8GB",storage:"128GB-1TB",display:"6.3英寸 LTPO OLED 120Hz",battery:"3582mAh",camera:"4800万主摄+4800万长焦+1200万超广角",price:7999,release:"2024-09"},
-{name:"小米14 Ultra",brand:"小米",soc:"骁龙8 Gen3",antutu:2100000,gb6cpu:2200,gb6gpu:3100,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.73英寸 LTPO OLED 120Hz",battery:"5300mAh",camera:"5000万主摄+5000万长焦+5000万超广角+5000万潜望",price:6499,release:"2024-02"},
-{name:"华为 Mate 60 Pro+",brand:"华为",soc:"麒麟9000S",antutu:900000,gb6cpu:1400,gb6gpu:1800,ram:"16GB",storage:"512GB-1TB",display:"6.82英寸 LTPO OLED 120Hz",battery:"5000mAh",camera:"4800万主摄+4000万长焦+4800万超广角",price:8999,release:"2023-09"},
-{name:"vivo X100 Pro",brand:"vivo",soc:"天玑9300",antutu:2250000,gb6cpu:2250,gb6gpu:3200,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.78英寸 LTPO OLED 120Hz",battery:"5400mAh",camera:"5000万主摄+5000万长焦+5000万超广角",price:4999,release:"2023-11"},
-{name:"OPPO Find X7 Ultra",brand:"OPPO",soc:"骁龙8 Gen3",antutu:2050000,gb6cpu:2200,gb6gpu:3100,ram:"12GB-16GB",storage:"256GB-512GB",display:"6.82英寸 LTPO OLED 120Hz",battery:"5000mAh",camera:"5000万主摄+5000万潜望+5000万超广角+5000万长焦",price:5999,release:"2024-01"},
-{name:"一加 12",brand:"一加",soc:"骁龙8 Gen3",antutu:2080000,gb6cpu:2200,gb6gpu:3100,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.82英寸 LTPO OLED 120Hz",battery:"5400mAh",camera:"5000万主摄+6400万长焦+4800万超广角",price:4299,release:"2023-12"},
-{name:"三星 Galaxy S24 Ultra",brand:"三星",soc:"骁龙8 Gen3",antutu:2000000,gb6cpu:2300,gb6gpu:3100,ram:"12GB",storage:"256GB-1TB",display:"6.8英寸 LTPO AMOLED 120Hz",battery:"5000mAh",camera:"2亿主摄+5000万长焦+1200万超广角+1000万长焦",price:9699,release:"2024-01"},
-{name:"荣耀 Magic6 Pro",brand:"荣耀",soc:"骁龙8 Gen3",antutu:2050000,gb6cpu:2200,gb6gpu:3050,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.8英寸 LTPO OLED 120Hz",battery:"5600mAh",camera:"5000万主摄+1.8亿潜望+5000万超广角",price:5699,release:"2024-01"},
-{name:"小米14",brand:"小米",soc:"骁龙8 Gen3",antutu:1750000,gb6cpu:2150,gb6gpu:3000,ram:"8GB-16GB",storage:"256GB-512GB",display:"6.36英寸 OLED 120Hz",battery:"4610mAh",camera:"5000万主摄+5000万长焦+5000万超广角",price:3999,release:"2023-11"},
-{name:"iPhone 15 Pro Max",brand:"苹果",soc:"Apple A17 Pro",antutu:1580000,gb6cpu:3000,gb6gpu:4600,ram:"8GB",storage:"256GB-1TB",display:"6.7英寸 LTPO OLED 120Hz",battery:"4441mAh",camera:"4800万主摄+1200万长焦+1200万超广角",price:9999,release:"2023-09"},
-{name:"Redmi K70 Pro",brand:"红米",soc:"骁龙8 Gen3",antutu:2000000,gb6cpu:2150,gb6gpu:3050,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.67英寸 2K OLED 120Hz",battery:"5000mAh",camera:"5000万主摄+5000万长焦+1200万超广角",price:3299,release:"2023-11"},
-{name:"realme GT5 Pro",brand:"realme",soc:"骁龙8 Gen3",antutu:2050000,gb6cpu:2180,gb6gpu:3080,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.78英寸 1.5K OLED 144Hz",battery:"5400mAh",camera:"5000万主摄+5000万长焦+800万超广角",price:3399,release:"2023-12"},
-{name:"iQOO 12 Pro",brand:"iQOO",soc:"骁龙8 Gen3",antutu:2100000,gb6cpu:2200,gb6gpu:3100,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.78英寸 1.5K OLED 144Hz",battery:"5100mAh",camera:"5000万主摄+6400万长焦+5000万超广角",price:4999,release:"2023-11"},
-{name:"魅族 21 Pro",brand:"魅族",soc:"骁龙8 Gen3",antutu:1950000,gb6cpu:2150,gb6gpu:3000,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.79英寸 LTPO OLED 120Hz",battery:"5050mAh",camera:"5000万主摄+5000万长焦+1300万超广角",price:4999,release:"2024-04"},
-{name:"华为 Pura 70 Ultra",brand:"华为",soc:"麒麟9010",antutu:1000000,gb6cpu:1500,gb6gpu:1900,ram:"12GB-16GB",storage:"512GB-1TB",display:"6.8英寸 LTPO OLED 120Hz",battery:"5200mAh",camera:"1英寸主摄+4800万长焦+4000万超广角",price:9999,release:"2024-04"},
-{name:"谷歌 Pixel 8 Pro",brand:"谷歌",soc:"Tensor G3",antutu:1050000,gb6cpu:1700,gb6gpu:2100,ram:"12GB",storage:"128GB-1TB",display:"6.7英寸 LTPO OLED 120Hz",battery:"5050mAh",camera:"5000万主摄+4800万长焦+4800万超广角",price:7999,release:"2023-10"},
-{name:"iPhone 16",brand:"苹果",soc:"Apple A18",antutu:1650000,gb6cpu:3100,gb6gpu:4200,ram:"8GB",storage:"128GB-512GB",display:"6.1英寸 OLED 60Hz",battery:"3561mAh",camera:"4800万主摄+1200万超广角",price:5999,release:"2024-09"},
-{name:"Redmi K70",brand:"红米",soc:"骁龙8 Gen2",antutu:1500000,gb6cpu:1900,gb6gpu:2600,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.67英寸 2K OLED 120Hz",battery:"5000mAh",camera:"5000万主摄+800万长焦+1200万超广角",price:2499,release:"2023-11"},
-{name:"一加 Ace 3 Pro",brand:"一加",soc:"骁龙8 Gen3",antutu:1980000,gb6cpu:2150,gb6gpu:3050,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.78英寸 1.5K OLED 120Hz",battery:"6100mAh",camera:"5000万主摄+800万超广角+200万微距",price:3199,release:"2024-06"}
-];
-
 const list=document.getElementById('list');
 const search=document.getElementById('search');
 const brandFilter=document.getElementById('brandFilter');
+const subtitle=document.getElementById('subtitle');
+const refreshBtn=document.getElementById('refreshBtn');
+const CACHE_KEY='phone_ranking_data_v1';
+let PHONES=[];
 let activePrice='all';
-
-const brands=[...new Set(PHONES.map(p=>p.brand))];
-brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;brandFilter.appendChild(o)});
 
 function rankClass(i){return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}
 function fmt(n){return n>=10000?(n/10000).toFixed(1)+'万':n.toLocaleString()}
 
 function render(){
+  if(PHONES.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">暂无数据，请检查网络后刷新</div>';return}
   const kw=search.value.trim().toLowerCase();
   const bf=brandFilter.value;
   let filtered=PHONES.filter(p=>{
-    const matchKw=!kw||p.name.toLowerCase().includes(kw)||p.brand.toLowerCase().includes(kw)||p.soc.toLowerCase().includes(kw);
+    const matchKw=!kw||p.name.toLowerCase().includes(kw)||p.brand.toLowerCase().includes(kw)||(p.processor||'').toLowerCase().includes(kw);
     const matchBrand=!bf||p.brand===bf;
     let matchPrice=true;
     if(activePrice!=='all'){
@@ -123,31 +103,31 @@ function render(){
   if(filtered.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">未找到匹配的手机</div>';return}
 
   list.innerHTML=filtered.map((p,i)=>`
-    <div class="phone" onclick="toggleDetail(${PHONES.indexOf(p)})">
+    <div class="phone" onclick="toggleDetail(${i})">
       <div class="row1">
         <div class="rank ${rankClass(i)}">${i+1}</div>
         <div class="info">
           <div class="name">${p.name}</div>
-          <div class="soc">${p.soc} · ${p.ram}</div>
+          <div class="soc">${p.processor||''} · ${p.ram||''}</div>
         </div>
         <div class="score">${fmt(p.antutu)}<small>安兔兔跑分</small></div>
       </div>
       <div class="tags">
-        <span class="tag tag-soc">${p.soc.split(' ')[0]}</span>
-        <span class="tag tag-ram">${p.ram}</span>
+        <span class="tag tag-soc">${(p.processor||'').split(' ')[0]}</span>
+        <span class="tag tag-ram">${p.ram||''}</span>
         <span class="tag tag-price">¥${p.price}起</span>
       </div>
-      <div class="detail" id="d-${PHONES.indexOf(p)}">
-        <div class="d-row"><span class="d-label">处理器</span><span class="d-val">${p.soc}</span></div>
-        <div class="d-row"><span class="d-label">内存</span><span class="d-val">${p.ram}</span></div>
-        <div class="d-row"><span class="d-label">存储</span><span class="d-val">${p.storage}</span></div>
-        <div class="d-row"><span class="d-label">屏幕</span><span class="d-val">${p.display}</span></div>
-        <div class="d-row"><span class="d-label">电池</span><span class="d-val">${p.battery}</span></div>
-        <div class="d-row"><span class="d-label">摄像头</span><span class="d-val">${p.camera}</span></div>
-        <div class="d-row"><span class="d-label">Geekbench6 CPU</span><span class="d-val">${fmt(p.gb6cpu)}</span></div>
-        <div class="d-row"><span class="d-label">Geekbench6 GPU</span><span class="d-val">${fmt(p.gb6gpu)}</span></div>
-        <div class="d-row"><span class="d-label">发布时间</span><span class="d-val">${p.release}</span></div>
+      <div class="detail" id="d-${i}">
+        <div class="d-row"><span class="d-label">处理器</span><span class="d-val">${p.processor||'-'}</span></div>
+        <div class="d-row"><span class="d-label">内存</span><span class="d-val">${p.ram||'-'}</span></div>
+        <div class="d-row"><span class="d-label">存储</span><span class="d-val">${p.storage||'-'}</span></div>
+        <div class="d-row"><span class="d-label">屏幕</span><span class="d-val">${p.screen||'-'}</span></div>
+        <div class="d-row"><span class="d-label">电池</span><span class="d-val">${p.battery||'-'}</span></div>
+        <div class="d-row"><span class="d-label">摄像头</span><span class="d-val">${p.camera||'-'}</span></div>
+        <div class="d-row"><span class="d-label">Geekbench6 单核</span><span class="d-val">${fmt(p.gb6Single||0)}</span></div>
+        <div class="d-row"><span class="d-label">Geekbench6 多核</span><span class="d-val">${fmt(p.gb6Multi||0)}</span></div>
         <div class="d-row"><span class="d-label">起售价</span><span class="d-val" style="color:#dc2626;font-weight:700">¥${p.price}</span></div>
+        ${p.note?`<div class="d-row"><span class="d-label">简评</span><span class="d-val">${p.note}</span></div>`:''}
       </div>
     </div>
   `).join('');
@@ -158,15 +138,55 @@ function toggleDetail(i){
   if(el)el.classList.toggle('show');
 }
 
+async function loadData(force=false){
+  if(!force){
+    try{
+      const cached=localStorage.getItem(CACHE_KEY);
+      if(cached){
+        const d=JSON.parse(cached);
+        PHONES=d.phones||[];
+        if(d.updated)subtitle.textContent=`数据更新于 ${d.updated} · 点击🔄刷新`;
+        render();
+        return;
+      }
+    }catch(e){}
+  }
+  list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">正在联网获取最新数据...</div>';
+  try{
+    const res=await fetch('data/phones.json?t='+Date.now());
+    const d=await res.json();
+    PHONES=d.phones||[];
+    if(d.updated)subtitle.textContent=`数据更新于 ${d.updated} · 点击🔄刷新`;
+    localStorage.setItem(CACHE_KEY,JSON.stringify(d));
+    const brands=[...new Set(PHONES.map(p=>p.brand))];
+    brandFilter.innerHTML='<option value="">全部品牌</option>';
+    brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;brandFilter.appendChild(o)});
+    render();
+  }catch(e){
+    try{
+      const cached=localStorage.getItem(CACHE_KEY);
+      if(cached){
+        const d=JSON.parse(cached);
+        PHONES=d.phones||[];
+        subtitle.textContent=`(离线缓存 ${d.updated||''})`;
+        render();
+      }else{
+        list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">加载失败，请检查网络</div>';
+      }
+    }catch(_){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">加载失败，请检查网络</div>'}
+  }
+}
+
 search.addEventListener('input',render);
 brandFilter.addEventListener('change',render);
+refreshBtn.addEventListener('click',()=>loadData(true));
 document.querySelectorAll('.filter-btn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   activePrice=b.dataset.price;
   render();
 }));
-render();
+loadData();
 
 // PWA
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

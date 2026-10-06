@@ -1,0 +1,26 @@
+{
+  "updated": "2026-10-06",
+  "source": "3DMark Time Spy/Port Royal/Steel Nomad 2026年",
+  "gpus": [
+    {"rank":1,"name":"NVIDIA GeForce RTX 5090","brand":"NVIDIA","memory":"32GB GDDR7","core":"21760 CUDA","boost":"2600MHz","tdp":"575W","interface":"PCIe 5.0","timeSpy":14636,"tsGraphics":15200,"portRoyal":38000,"price":15999,"note":"2026卡皇，Blackwell架构，DLSS 4光追"},
+    {"rank":2,"name":"NVIDIA GeForce RTX 4090","brand":"NVIDIA","memory":"24GB GDDR6X","core":"16384 CUDA","boost":"2520MHz","tdp":"450W","interface":"PCIe 4.0","timeSpy":9225,"tsGraphics":9800,"portRoyal":28000,"price":12999,"note":"上代卡皇，性价比依然高"},
+    {"rank":3,"name":"NVIDIA GeForce RTX 5080","brand":"NVIDIA","memory":"16GB GDDR7","core":"10752 CUDA","boost":"2600MHz","tdp":"360W","interface":"PCIe 5.0","timeSpy":8938,"tsGraphics":9400,"portRoyal":26000,"price":7999,"note":"次旗舰，4K游戏无压力"},
+    {"rank":4,"name":"NVIDIA GeForce RTX 4090 D","brand":"NVIDIA","memory":"24GB GDDR6X","core":"14592 CUDA","boost":"2520MHz","tdp":"450W","interface":"PCIe 4.0","timeSpy":8607,"tsGraphics":9100,"portRoyal":26500,"price":12999,"note":"4090特供版，性能略低"},
+    {"rank":5,"name":"NVIDIA GeForce RTX 5070 Ti","brand":"NVIDIA","memory":"16GB GDDR7","core":"8960 CUDA","boost":"2600MHz","tdp":"300W","interface":"PCIe 5.0","timeSpy":6967,"tsGraphics":7400,"portRoyal":20000,"price":5999,"note":"中高端甜点，2K光追流畅"},
+    {"rank":6,"name":"AMD Radeon RX 9070 XT","brand":"AMD","memory":"16GB GDDR6","core":"5120 Stream","boost":"2900MHz","tdp":"300W","interface":"PCIe 5.0","timeSpy":7273,"tsGraphics":7700,"portRoyal":14000,"price":4499,"note":"RDNA 5架构，性价比高"},
+    {"rank":7,"name":"NVIDIA GeForce RTX 5070","brand":"NVIDIA","memory":"12GB GDDR7","core":"6144 CUDA","boost":"2500MHz","tdp":"250W","interface":"PCIe 5.0","timeSpy":5900,"tsGraphics":6300,"portRoyal":17000,"price":4499,"note":"2K游戏主流选择"},
+    {"rank":8,"name":"AMD Radeon RX 9070","brand":"AMD","memory":"12GB GDDR6","core":"3840 Stream","boost":"2800MHz","tdp":"250W","interface":"PCIe 5.0","timeSpy":5800,"tsGraphics":6100,"portRoyal":11500,"price":3299,"note":"RDNA 5中端，性价比突出"},
+    {"rank":9,"name":"NVIDIA GeForce RTX 4080 SUPER","brand":"NVIDIA","memory":"16GB GDDR6X","core":"10240 CUDA","boost":"2550MHz","tdp":"320W","interface":"PCIe 4.0","timeSpy":8200,"tsGraphics":8700,"portRoyal":24000,"price":8499,"note":"上代次旗舰，4K高刷"},
+    {"rank":10,"name":"NVIDIA GeForce RTX 4080","brand":"NVIDIA","memory":"16GB GDDR6X","core":"9728 CUDA","boost":"2505MHz","tdp":"320W","interface":"PCIe 4.0","timeSpy":7700,"tsGraphics":8100,"portRoyal":22000,"price":9999,"note":"上代次旗舰"},
+    {"rank":11,"name":"AMD Radeon RX 7900 XTX","brand":"AMD","memory":"24GB GDDR6","core":"6144 Stream","boost":"2500MHz","tdp":"355W","interface":"PCIe 4.0","timeSpy":7500,"tsGraphics":7900,"portRoyal":14000,"price":5999,"note":"上代AMD卡皇，大显存"},
+    {"rank":12,"name":"NVIDIA GeForce RTX 4070 Ti SUPER","brand":"NVIDIA","memory":"16GB GDDR6X","core":"8448 CUDA","boost":"2610MHz","tdp":"285W","interface":"PCIe 4.0","timeSpy":6800,"tsGraphics":7200,"portRoyal":19000,"price":5499,"note":"2K高刷甜品卡"},
+    {"rank":13,"name":"NVIDIA GeForce RTX 5060 Ti","brand":"NVIDIA","memory":"8GB GDDR7","core":"4096 CUDA","boost":"2500MHz","tdp":"180W","interface":"PCIe 5.0","timeSpy":4500,"tsGraphics":4800,"portRoyal":12000,"price":2999,"note":"入门光追，1080P高刷"},
+    {"rank":14,"name":"AMD Radeon RX 7900 XT","brand":"AMD","memory":"20GB GDDR6","core":"5376 Stream","boost":"2400MHz","tdp":"315W","interface":"PCIe 4.0","timeSpy":6300,"tsGraphics":6700,"portRoyal":12000,"price":4999,"note":"大显存，生产力可用"},
+    {"rank":15,"name":"NVIDIA GeForce RTX 4070 SUPER","brand":"NVIDIA","memory":"12GB GDDR6X","core":"7168 CUDA","boost":"2475MHz","tdp":"220W","interface":"PCIe 4.0","timeSpy":5800,"tsGraphics":6200,"portRoyal":16500,"price":4499,"note":"2K主流卡"},
+    {"rank":16,"name":"AMD Radeon RX 7800 XT","brand":"AMD","memory":"16GB GDDR6","core":"3840 Stream","boost":"2430MHz","tdp":"263W","interface":"PCIe 4.0","timeSpy":5300,"tsGraphics":5600,"portRoyal":10000,"price":3299,"note":"16GB大显存，2K游戏"},
+    {"rank":17,"name":"NVIDIA GeForce RTX 4070","brand":"NVIDIA","memory":"12GB GDDR6X","core":"5888 CUDA","boost":"2475MHz","tdp":"200W","interface":"PCIe 4.0","timeSpy":5200,"tsGraphics":5500,"portRoyal":14500,"price":4499,"note":"上代甜品卡"},
+    {"rank":18,"name":"NVIDIA GeForce RTX 4060 Ti 8GB","brand":"NVIDIA","memory":"8GB GDDR6","core":"4352 CUDA","boost":"2535MHz","tdp":"160W","interface":"PCIe 4.0","timeSpy":3900,"tsGraphics":4200,"portRoyal":10500,"price":2999,"note":"1080P光追入门"},
+    {"rank":19,"name":"AMD Radeon RX 7700 XT","brand":"AMD","memory":"12GB GDDR6","core":"3456 Stream","boost":"2544MHz","tdp":"245W","interface":"PCIe 4.0","timeSpy":4600,"tsGraphics":4900,"portRoyal":8500,"price":2499,"note":"2K性价比选择"},
+    {"rank":20,"name":"NVIDIA GeForce RTX 4060","brand":"NVIDIA","memory":"8GB GDDR6","core":"3072 CUDA","boost":"2460MHz","tdp":"115W","interface":"PCIe 4.0","timeSpy":3300,"tsGraphics":3500,"portRoyal":8500,"price":2399,"note":"低功耗入门光追"}
+  ]
+}

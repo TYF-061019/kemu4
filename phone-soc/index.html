@@ -48,76 +48,97 @@ header p{font-size:12px;opacity:.85;margin-top:2px}
 <body>
 <header>
   <h1>🔬 手机芯片排行榜</h1>
-  <p>手机SoC处理器性能排名 · 安兔兔跑分</p>
+  <p id="subtitle">手机SoC处理器性能排名 · 2026年最新数据</p>
 </header>
 <div class="toolbar">
   <input id="search" placeholder="搜索芯片型号或厂商...">
+  <button id="refreshBtn" title="刷新数据" style="padding:0 14px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:18px">🔄</button>
 </div>
-<div class="list" id="list"></div>
+<div class="list" id="list"><div style="text-align:center;color:var(--muted);padding:40px">加载中...</div></div>
 
 <script>
-const SOCS=[
-{name:"Apple A18 Pro",mfr:"苹果",proc:"6核(2大+4小)",gpu:"6核 Apple GPU",nm:"3nm",antutu:2150000,gb6cpu:3300,gb6gpu:5100,release:"2024",note:"苹果自研，性能最强手机芯片"},
-{name:"联发科 天玑9300+",mfr:"联发科",proc:"8核全大核(4X4+4A720)",gpu:"Immortalis-G720 MC12",nm:"4nm",antutu:2350000,gb6cpu:2300,gb6gpu:3300,release:"2024",note:"全大核架构，GPU性能强劲"},
-{name:"高通 骁龙8 Gen3",mfr:"高通",proc:"8核(1X4+3A720+4A520)",gpu:"Adreno 750",nm:"4nm",antutu:2150000,gb6cpu:2250,gb6gpu:3150,release:"2023",note:"2024安卓旗舰标配"},
-{name:"Apple A18",mfr:"苹果",proc:"6核(2大+4小)",gpu:"5核 Apple GPU",nm:"3nm",antutu:1680000,gb6cpu:3100,gb6gpu:4200,release:"2024",note:"iPhone 16 标准版搭载"},
-{name:"Apple A17 Pro",mfr:"苹果",proc:"6核(2大+4小)",gpu:"6核 Apple GPU",nm:"3nm",antutu:1600000,gb6cpu:3000,gb6gpu:4600,release:"2023",note:"首款3nm工艺手机芯片"},
-{name:"联发科 天玑9300",mfr:"联发科",proc:"8核全大核",gpu:"Immortalis-G720 MC12",nm:"4nm",antutu:2250000,gb6cpu:2250,gb6gpu:3200,release:"2023",note:"vivo X100系列首发"},
-{name:"高通 骁龙8 Gen2",mfr:"高通",proc:"8核(1X3+2A715+2A710+3A510)",gpu:"Adreno 740",nm:"4nm",antutu:1500000,gb6cpu:1950,gb6gpu:2700,release:"2022",note:"2023年中高端主流"},
-{name:"华为 麒麟9010",mfr:"华为",proc:"8核",gpu:"Maleoon 910",nm:"7nm",antutu:1050000,gb6cpu:1500,gb6gpu:1950,release:"2024",note:"华为Pura 70系列搭载"},
-{name:"华为 麒麟9000S",mfr:"华为",proc:"8核(1大+3中+4小)",gpu:"Maleoon 910",nm:"7nm",antutu:950000,gb6cpu:1400,gb6gpu:1800,release:"2023",note:"Mate 60系列搭载，国产突破"},
-{name:"联发科 天玑9200+",mfr:"联发科",proc:"8核(1X3+3A715+4A510)",gpu:"Immortalis-G715 MC11",nm:"4nm",antutu:1400000,gb6cpu:1900,gb6gpu:2600,release:"2023",note:"天玑9200超频版"},
-{name:"高通 骁龙8+ Gen1",mfr:"高通",proc:"8核(1X2+3A710+4A510)",gpu:"Adreno 730",nm:"4nm(台积电)",antutu:1200000,gb6cpu:1750,gb6gpu:2400,release:"2022",note:"骁龙8换台积电工艺，功耗大降"},
-{name:"联发科 天玑9000",mfr:"联发科",proc:"8核(1X2+3A710+4A510)",gpu:"Mali-G710 MC10",nm:"4nm",antutu:1050000,gb6cpu:1700,gb6gpu:2200,release:"2021",note:"联发科旗舰翻身之作"},
-{name:"高通 骁龙8 Gen1",mfr:"高通",proc:"8核(1X2+3A710+4A510)",gpu:"Adreno 730",nm:"4nm(三星)",antutu:1000000,gb6cpu:1650,gb6gpu:2100,release:"2021",note:"三星工艺，发热较大"},
-{name:"Google Tensor G3",mfr:"谷歌",proc:"9核(2X3+2A715+4A510+1小核)",gpu:"Mali-G715 MC7",nm:"4nm",antutu:1100000,gb6cpu:1700,gb6gpu:2100,release:"2023",note:"Pixel 8系列，AI能力突出"},
-{name:"Apple A16 Bionic",mfr:"苹果",proc:"6核(2大+4小)",gpu:"5核 Apple GPU",nm:"4nm",antutu:1250000,gb6cpu:2800,gb6gpu:3800,release:"2022",note:"iPhone 14 Pro系列"},
-{name:"Apple A15 Bionic",mfr:"苹果",proc:"6核(2大+4小)",gpu:"5核 Apple GPU",nm:"5nm",antutu:1100000,gb6cpu:2600,gb6gpu:3400,release:"2021",note:"iPhone 13系列，能效比优秀"},
-{name:"联发科 天玑8300",mfr:"联发科",proc:"8核(1A715+3A715+4A510)",gpu:"Mali-G615 MC6",nm:"4nm",antutu:1350000,gb6cpu:1750,gb6gpu:2300,release:"2023",note:"中端神U，接近旗舰性能"},
-{name:"高通 骁龙7+ Gen3",mfr:"高通",proc:"8核(1A715+3A715+4A510)",gpu:"Adreno 720",nm:"4nm",antutu:1300000,gb6cpu:1700,gb6gpu:2250,release:"2024",note:"中端性能怪兽"},
-{name:"联发科 天玑7200",mfr:"联发科",proc:"8核(2A715+6A510)",gpu:"Mali-G610 MC4",nm:"4nm",antutu:800000,gb6cpu:1400,gb6gpu:1700,release:"2023",note:"中低端主力"},
-{name:"高通 骁龙7 Gen3",mfr:"高通",proc:"8核(1A715+3A710+4A510)",gpu:"Adreno 716",nm:"4nm",antutu:750000,gb6cpu:1350,gb6gpu:1600,release:"2024",note:"入门级芯片"}
-];
-
 const list=document.getElementById('list');
 const search=document.getElementById('search');
+const subtitle=document.getElementById('subtitle');
+const refreshBtn=document.getElementById('refreshBtn');
+const CACHE_KEY='phone_soc_data_v1';
+let SOCS=[];
+
 function rankClass(i){return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}
 function fmt(n){return n>=10000?(n/10000).toFixed(1)+'万':n.toLocaleString()}
 
 function render(){
+  if(SOCS.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">暂无数据，请检查网络后刷新</div>';return}
   const kw=search.value.trim().toLowerCase();
-  let filtered=SOCS.filter(s=>!kw||s.name.toLowerCase().includes(kw)||s.mfr.toLowerCase().includes(kw)).sort((a,b)=>b.antutu-a.antutu);
+  let filtered=SOCS.filter(s=>!kw||s.name.toLowerCase().includes(kw)||(s.brand||'').toLowerCase().includes(kw)).sort((a,b)=>(b.antutuAI||0)-(a.antutuAI||0));
   if(filtered.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">未找到匹配的芯片</div>';return}
   list.innerHTML=filtered.map((s,i)=>`
-    <div class="item" onclick="document.getElementById('d-${SOCS.indexOf(s)}').classList.toggle('show')">
+    <div class="item" onclick="document.getElementById('d-${i}').classList.toggle('show')">
       <div class="row1">
         <div class="rank ${rankClass(i)}">${i+1}</div>
         <div class="info">
           <div class="name">${s.name}</div>
-          <div class="mfr">${s.mfr} · ${s.nm}工艺</div>
+          <div class="mfr">${s.brand||''} · ${s.process||''}工艺</div>
         </div>
-        <div class="score">${fmt(s.antutu)}<small>安兔兔跑分</small></div>
+        <div class="score">${fmt(s.antutuAI||0)}<small>AI跑分</small></div>
       </div>
       <div class="tags">
-        <span class="tag tag-mfr">${s.mfr}</span>
-        <span class="tag tag-proc">${s.nm}</span>
-        <span class="tag tag-gpu">${s.proc.split('(')[0]}</span>
+        <span class="tag tag-mfr">${s.brand||''}</span>
+        <span class="tag tag-proc">${s.process||''}</span>
+        <span class="tag tag-gpu">${(s.gpu||'').split(' ')[0]}</span>
       </div>
-      <div class="detail" id="d-${SOCS.indexOf(s)}">
-        <div class="d-row"><span class="d-label">厂商</span><span class="d-val">${s.mfr}</span></div>
-        <div class="d-row"><span class="d-label">CPU架构</span><span class="d-val">${s.proc}</span></div>
-        <div class="d-row"><span class="d-label">GPU</span><span class="d-val">${s.gpu}</span></div>
-        <div class="d-row"><span class="d-label">制程工艺</span><span class="d-val">${s.nm}</span></div>
-        <div class="d-row"><span class="d-label">Geekbench6 CPU</span><span class="d-val">${fmt(s.gb6cpu)}</span></div>
-        <div class="d-row"><span class="d-label">Geekbench6 GPU</span><span class="d-val">${fmt(s.gb6gpu)}</span></div>
-        <div class="d-row"><span class="d-label">发布年份</span><span class="d-val">${s.release}</span></div>
-        <div class="d-row"><span class="d-label">简评</span><span class="d-val">${s.note}</span></div>
+      <div class="detail" id="d-${i}">
+        <div class="d-row"><span class="d-label">厂商</span><span class="d-val">${s.brand||'-'}</span></div>
+        <div class="d-row"><span class="d-label">CPU架构</span><span class="d-val">${s.cpu||'-'}</span></div>
+        <div class="d-row"><span class="d-label">GPU</span><span class="d-val">${s.gpu||'-'}</span></div>
+        <div class="d-row"><span class="d-label">制程工艺</span><span class="d-val">${s.process||'-'}</span></div>
+        <div class="d-row"><span class="d-label">Geekbench6 单核</span><span class="d-val">${fmt(s.gb6Single||0)}</span></div>
+        <div class="d-row"><span class="d-label">Geekbench6 多核</span><span class="d-val">${fmt(s.gb6Multi||0)}</span></div>
+        <div class="d-row"><span class="d-label">简评</span><span class="d-val">${s.note||'-'}</span></div>
       </div>
     </div>
   `).join('');
 }
+
+async function loadData(force=false){
+  if(!force){
+    try{
+      const cached=localStorage.getItem(CACHE_KEY);
+      if(cached){
+        const d=JSON.parse(cached);
+        SOCS=d.socs||[];
+        if(d.updated)subtitle.textContent=`数据更新于 ${d.updated} · 点击🔄刷新`;
+        render();
+        return;
+      }
+    }catch(e){}
+  }
+  list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">正在联网获取最新数据...</div>';
+  try{
+    const res=await fetch('data/socs.json?t='+Date.now());
+    const d=await res.json();
+    SOCS=d.socs||[];
+    if(d.updated)subtitle.textContent=`数据更新于 ${d.updated} · 点击🔄刷新`;
+    localStorage.setItem(CACHE_KEY,JSON.stringify(d));
+    render();
+  }catch(e){
+    try{
+      const cached=localStorage.getItem(CACHE_KEY);
+      if(cached){
+        const d=JSON.parse(cached);
+        SOCS=d.socs||[];
+        subtitle.textContent=`(离线缓存 ${d.updated||''})`;
+        render();
+      }else{
+        list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">加载失败，请检查网络</div>';
+      }
+    }catch(_){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">加载失败，请检查网络</div>'}
+  }
+}
+
 search.addEventListener('input',render);
-render();
+refreshBtn.addEventListener('click',()=>loadData(true));
+loadData();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>

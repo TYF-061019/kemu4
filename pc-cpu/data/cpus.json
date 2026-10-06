@@ -1,0 +1,26 @@
+{
+  "updated": "2026-10-06",
+  "source": "Cinebench R23/3DMark CPU Profile/Geekbench6 2026年",
+  "cpus": [
+    {"rank":1,"name":"AMD Ryzen 9 9950X3D","brand":"AMD","cores":"16核32线程","base":"4.3GHz","boost":"5.7GHz","tdp":"120W","cache":"128MB L3","socket":"AM5","r23Multi":48500,"r23Single":2350,"gb6Multi":30000,"price":4499,"note":"AMD最强桌面U，3D V-Cache游戏王者"},
+    {"rank":2,"name":"AMD Ryzen 9 9950X","brand":"AMD","cores":"16核32线程","base":"4.3GHz","boost":"5.7GHz","tdp":"170W","cache":"64MB L3","socket":"AM5","r23Multi":46000,"r23Single":2340,"gb6Multi":28500,"price":3999,"note":"多核性能怪兽，生产力首选"},
+    {"rank":3,"name":"Intel Core Ultra 9 285K","brand":"Intel","cores":"24核(8P+16E)24线程","base":"3.0GHz","boost":"5.7GHz","tdp":"150W","cache":"36MB L3","socket":"LGA 1851","r23Multi":33309,"r23Single":2400,"gb6Multi":25000,"price":4299,"note":"Panther Lake架构，单核性能强劲"},
+    {"rank":4,"name":"Intel Core Ultra 7 270K Plus","brand":"Intel","cores":"24核(8P+16E)24线程","base":"3.7GHz","boost":"5.6GHz","tdp":"150W","cache":"36MB L3","socket":"LGA 1851","r23Multi":43070,"r23Single":2380,"gb6Multi":26000,"price":3299,"note":"性能核+能效核，综合实力强"},
+    {"rank":5,"name":"Intel Core Ultra 7 265K","brand":"Intel","cores":"20核(6P+14E)20线程","base":"3.9GHz","boost":"5.5GHz","tdp":"125W","cache":"30MB L3","socket":"LGA 1851","r23Multi":32000,"r23Single":2350,"gb6Multi":22000,"price":2899,"note":"中端性价比之选"},
+    {"rank":6,"name":"AMD Ryzen 9 9900X","brand":"AMD","cores":"12核24线程","base":"4.4GHz","boost":"5.6GHz","tdp":"120W","cache":"64MB L3","socket":"AM5","r23Multi":38000,"r23Single":2330,"gb6Multi":24000,"price":3299,"note":"12核甜点，游戏生产力兼顾"},
+    {"rank":7,"name":"Intel Core Ultra 9 285","brand":"Intel","cores":"24核(8P+16E)24线程","base":"2.5GHz","boost":"5.4GHz","tdp":"65W","cache":"36MB L3","socket":"LGA 1851","r23Multi":31000,"r23Single":2300,"gb6Multi":23500,"price":3599,"note":"低功耗版，能效比出色"},
+    {"rank":8,"name":"AMD Ryzen 7 9700X","brand":"AMD","cores":"8核16线程","base":"3.8GHz","boost":"5.5GHz","tdp":"65W","cache":"32MB L3","socket":"AM5","r23Multi":26000,"r23Single":2290,"gb6Multi":18500,"price":2299,"note":"8核游戏神U，功耗低"},
+    {"rank":9,"name":"Intel Core Ultra 5 235","brand":"Intel","cores":"14核(6P+8E)14线程","base":"3.5GHz","boost":"5.2GHz","tdp":"65W","cache":"24MB L3","socket":"LGA 1851","r23Multi":22000,"r23Single":2200,"gb6Multi":17000,"price":1699,"note":"入门级Panther Lake，办公首选"},
+    {"rank":10,"name":"AMD Ryzen 7 9700","brand":"AMD","cores":"8核16线程","base":"3.8GHz","boost":"5.4GHz","tdp":"65W","cache":"32MB L3","socket":"AM5","r23Multi":24500,"r23Single":2250,"gb6Multi":17500,"price":1999,"note":"无核显版，性价比高"},
+    {"rank":11,"name":"Intel Core i9-14900K","brand":"Intel","cores":"24核(8P+16E)32线程","base":"3.2GHz","boost":"6.0GHz","tdp":"253W","cache":"36MB L3","socket":"LGA 1700","r23Multi":45000,"r23Single":2350,"gb6Multi":28000,"price":4299,"note":"上代旗舰，6.0GHz高频"},
+    {"rank":12,"name":"AMD Ryzen 9 7950X3D","brand":"AMD","cores":"16核32线程","base":"4.2GHz","boost":"5.7GHz","tdp":"120W","cache":"128MB L3","socket":"AM5","r23Multi":44000,"r23Single":2200,"gb6Multi":27000,"price":3999,"note":"上代3D V-Cache，游戏依然强"},
+    {"rank":13,"name":"Intel Core i7-14700K","brand":"Intel","cores":"20核(8P+12E)28线程","base":"3.4GHz","boost":"5.6GHz","tdp":"253W","cache":"33MB L3","socket":"LGA 1700","r23Multi":38000,"r23Single":2300,"gb6Multi":23000,"price":2899,"note":"上代甜点U"},
+    {"rank":14,"name":"AMD Ryzen 7 7800X3D","brand":"AMD","cores":"8核16线程","base":"4.2GHz","boost":"5.0GHz","tdp":"120W","cache":"96MB L3","socket":"AM5","r23Multi":25000,"r23Single":2100,"gb6Multi":17500,"price":2499,"note":"游戏神U，3D V-Cache加持"},
+    {"rank":15,"name":"Intel Core Ultra 7 265","brand":"Intel","cores":"20核(6P+14E)20线程","base":"2.8GHz","boost":"5.3GHz","tdp":"65W","cache":"30MB L3","socket":"LGA 1851","r23Multi":27000,"r23Single":2250,"gb6Multi":19500,"price":2299,"note":"低功耗版，适合迷你主机"},
+    {"rank":16,"name":"AMD Ryzen 5 9600X","brand":"AMD","cores":"6核12线程","base":"3.9GHz","boost":"5.4GHz","tdp":"65W","cache":"32MB L3","socket":"AM5","r23Multi":21000,"r23Single":2270,"gb6Multi":15000,"price":1499,"note":"6核入门，游戏办公够用"},
+    {"rank":17,"name":"Intel Core i5-14600K","brand":"Intel","cores":"14核(6P+8E)20线程","base":"3.5GHz","boost":"5.3GHz","tdp":"181W","cache":"24MB L3","socket":"LGA 1700","r23Multi":28000,"r23Single":2250,"gb6Multi":19000,"price":2099,"note":"上代性价比之选"},
+    {"rank":18,"name":"AMD Ryzen 5 7600X","brand":"AMD","cores":"6核12线程","base":"4.7GHz","boost":"5.3GHz","tdp":"105W","cache":"32MB L3","socket":"AM5","r23Multi":20000,"r23Single":2150,"gb6Multi":14500,"price":1299,"note":"入门游戏U，AM5平台"},
+    {"rank":19,"name":"Intel Core Ultra 5 225","brand":"Intel","cores":"14核(4P+10E)14线程","base":"3.5GHz","boost":"5.0GHz","tdp":"65W","cache":"24MB L3","socket":"LGA 1851","r23Multi":18000,"r23Single":2100,"gb6Multi":14000,"price":1399,"note":"入门办公，核显强劲"},
+    {"rank":20,"name":"AMD Ryzen 5 7500F","brand":"AMD","cores":"6核12线程","base":"3.7GHz","boost":"5.0GHz","tdp":"65W","cache":"32MB L3","socket":"AM5","r23Multi":17000,"r23Single":2000,"gb6Multi":12500,"price":899,"note":"无核显性价比神U"}
+  ]
+}

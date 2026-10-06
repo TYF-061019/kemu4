@@ -1,0 +1,26 @@
+{
+  "updated": "2026-10-06",
+  "source": "Geekbench6/安兔兔AI榜/官方规格 2026年",
+  "socs": [
+    {"rank":1,"name":"骁龙8 至尊版 Gen5","brand":"高通","cpu":"2x4.6GHz Oryon Prime + 3x3.8GHz Oryon + 3x3.0GHz Oryon","gpu":"Adreno 840","process":"3nm N3P","antutuAI":2319961,"gb6Single":2920,"gb6Multi":8400,"note":"2026安卓最强SoC，Oryon自研架构，AI性能第一"},
+    {"rank":2,"name":"天玑9500","brand":"联发科","cpu":"1x4.21GHz C1-Ultra + 3x3.5GHz C1-Premium + 4x2.7GHz C1-Pro","gpu":"Mali-G1 Ultra MP12","process":"3nm N3P","antutuAI":2280000,"gb6Single":2850,"gb6Multi":8420,"note":"全大核架构，CPU多核最强，能效比出色"},
+    {"rank":3,"name":"Apple A19 Pro","brand":"苹果","cpu":"2x4.0GHz Everest + 4x3.0GHz Sawtooth","gpu":"Apple GPU 6核","process":"3nm N3E","antutuAI":1800000,"gb6Single":3100,"gb6Multi":9003,"note":"单核性能王者，GPU领先安卓一代"},
+    {"rank":4,"name":"Apple A19","brand":"苹果","cpu":"2x3.8GHz Everest + 4x2.8GHz Sawtooth","gpu":"Apple GPU 5核","process":"3nm N3E","antutuAI":1650000,"gb6Single":2900,"gb6Multi":7500,"note":"A19降频版，能效比优秀"},
+    {"rank":5,"name":"麒麟9020","brand":"华为海思","cpu":"1x3.2GHz Cortex-X925 + 3x2.8GHz A725 + 4x2.0GHz A525","gpu":"Maleoon 920","process":"3nm N3E","antutuAI":1200000,"gb6Single":2450,"gb6Multi":6800,"note":"国产旗舰，鸿蒙NEXT深度优化"},
+    {"rank":6,"name":"骁龙8 Gen4","brand":"高通","cpu":"2x4.3GHz Oryon + 6x3.0GHz Oryon","gpu":"Adreno 830","process":"3nm N3E","antutuAI":1900000,"gb6Single":2650,"gb6Multi":7800,"note":"首代Oryon架构，CPU大幅提升"},
+    {"rank":7,"name":"天玑9400","brand":"联发科","cpu":"1x4.0GHz Cortex-X925 + 3x3.3GHz A725 + 4x2.3GHz A525","gpu":"Mali-G925 MC12","process":"3nm N3E","antutuAI":1700000,"gb6Single":2650,"gb6Multi":7600,"note":"全大核先行者，性能均衡"},
+    {"rank":8,"name":"麒麟9010","brand":"华为海思","cpu":"1x3.0GHz Cortex-X925 + 3x2.6GHz A725 + 4x1.9GHz A525","gpu":"Maleoon 910","process":"3nm N3E","antutuAI":1000000,"gb6Single":2250,"gb6Multi":6200,"note":"麒麟9020降频版，中端旗舰"},
+    {"rank":9,"name":"Apple A18 Pro","brand":"苹果","cpu":"2x3.8GHz Everest + 4x2.8GHz Sawtooth","gpu":"Apple GPU 6核","process":"3nm N3E","antutuAI":1400000,"gb6Single":2850,"gb6Multi":7200,"note":"iPhone 16 Pro系列，GPU光追"},
+    {"rank":10,"name":"骁龙8 Gen3","brand":"高通","cpu":"1x3.3GHz Cortex-X4 + 5x3.2GHz A720 + 2x2.3GHz A520","gpu":"Adreno 750","process":"4nm N4P","antutuAI":1300000,"gb6Single":2300,"gb6Multi":6900,"note":"2024旗舰，性能依然强劲"},
+    {"rank":11,"name":"天玑9300","brand":"联发科","cpu":"1x3.25GHz Cortex-X4 + 3x2.85GHz A720 + 4x2.0GHz A520","gpu":"Immortalis-G720 MC12","process":"4nm N4X","antutuAI":1150000,"gb6Single":2250,"gb6Multi":6800,"note":"全大核架构，多核性能强"},
+    {"rank":12,"name":"麒麟9000S","brand":"华为海思","cpu":"1x2.6GHz Taishan V125 + 3x2.15GHz A78 + 4x1.53GHz A55","gpu":"Maleoon 910","process":"7nm","antutuAI":700000,"gb6Single":1400,"gb6Multi":4300,"note":"国产破冰之作，Mate 60系列"},
+    {"rank":13,"name":"Apple A17 Pro","brand":"苹果","cpu":"2x3.7GHz Everest + 4x2.8GHz Sawtooth","gpu":"Apple GPU 6核","process":"3nm N3B","antutuAI":950000,"gb6Single":2750,"gb6Multi":6800,"note":"首款3nm芯片，支持硬件光追"},
+    {"rank":14,"name":"骁龙8s Gen3","brand":"高通","cpu":"1x3.0GHz Cortex-X4 + 4x2.8GHz A720 + 3x2.0GHz A520","gpu":"Adreno 735","process":"4nm N4P","antutuAI":800000,"gb6Single":2100,"gb6Multi":6100,"note":"骁龙8 Gen3降频版，中端性价比"},
+    {"rank":15,"name":"天玑8400","brand":"联发科","cpu":"1x3.35GHz Cortex-X4 + 3x2.6GHz A720 + 4x2.0GHz A520","gpu":"Mali-G720 MC6","process":"4nm N4P","antutuAI":750000,"gb6Single":2050,"gb6Multi":5900,"note":"中端神U，性能接近旗舰"},
+    {"rank":16,"name":"Apple A16","brand":"苹果","cpu":"2x3.46GHz Everest + 4x2.02GHz Sawtooth","gpu":"Apple GPU 5核","process":"4nm N4P","antutuAI":600000,"gb6Single":2500,"gb6Multi":6100,"note":"iPhone 14 Pro/15系列，能效比优秀"},
+    {"rank":17,"name":"骁龙7+ Gen3","brand":"高通","cpu":"1x3.0GHz Cortex-X4 + 3x2.6GHz A720 + 4x1.9GHz A520","gpu":"Adreno 720","process":"4nm N4P","antutuAI":650000,"gb6Single":1950,"gb6Multi":5700,"note":"中端性价比之选"},
+    {"rank":18,"name":"天玑8300","brand":"联发科","cpu":"1x3.35GHz Cortex-X4 + 3x2.6GHz A720 + 4x2.0GHz A520","gpu":"Mali-G615 MC6","process":"4nm N4P","antutuAI":600000,"gb6Single":1900,"gb6Multi":5500,"note":"中端性能标杆"},
+    {"rank":19,"name":"麒麟8000","brand":"华为海思","cpu":"1x2.6GHz Cortex-A78 + 3x2.4GHz A78 + 4x1.8GHz A55","gpu":"Mali-G68 MC4","process":"6nm","antutuAI":400000,"gb6Single":1300,"gb6Multi":4000,"note":"华为中端芯片，Nova系列"},
+    {"rank":20,"name":"骁龙7 Gen3","brand":"高通","cpu":"1x2.6GHz Cortex-A715 + 4x2.4GHz A715 + 3x1.9GHz A510","gpu":"Adreno 710","process":"4nm N4P","antutuAI":450000,"gb6Single":1650,"gb6Multi":4800,"note":"入门级芯片，主打能效"}
+  ]
+}
