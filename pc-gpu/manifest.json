@@ -1,0 +1,1 @@
+{"name":"电脑显卡排行榜","short_name":"显卡榜","description":"桌面级显卡性能排名、规格参数、跑分对比","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#f5f5f7","theme_color":"#ef4444","lang":"zh-CN","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f59e0b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CPU榜">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>电脑CPU排行榜</title>
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--border:#e5e5e5;--text:#1a1a1a;--muted:#86868b;--brand:#f59e0b;--brand-soft:#fef3c7;--gold:#f59e0b;--silver:#94a3b8;--bronze:#b45309}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px;padding-bottom:80px}
+header{background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;padding:20px 16px 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(245,158,11,.3)}
+header h1{font-size:18px;font-weight:700}
+header p{font-size:12px;opacity:.85;margin-top:2px}
+.tabs{display:flex;gap:6px;padding:10px 16px;position:sticky;top:64px;background:var(--bg);z-index:99}
+.tab{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;color:var(--muted);text-align:center}
+.tab.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600}
+.toolbar{display:flex;gap:8px;padding:12px 16px;background:var(--bg)}
+.toolbar input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff}
+.list{padding:0 16px}
+.item{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid var(--border);cursor:pointer}
+.item .row1{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rank{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;color:#fff}
+.rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.rank-2{background:linear-gradient(135deg,#94a3b8,#64748b)}
+.rank-3{background:linear-gradient(135deg,#f97316,#b45309)}
+.rank-other{background:var(--brand)}
+.item .info{flex:1;min-width:0}
+.item .name{font-weight:600;font-size:15px}
+.item .spec{font-size:12px;color:var(--muted);margin-top:2px}
+.item .score{font-weight:700;font-size:16px;color:var(--brand);text-align:right;flex-shrink:0}
+.item .score small{display:block;font-size:10px;color:var(--muted);font-weight:400}
+.item .tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tag{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:500}
+.tag-mfr{background:var(--brand-soft);color:#92400e}
+.tag-core{background:#dbeafe;color:#1e40af}
+.tag-tdp{background:#fee2e2;color:#991b1b}
+.detail{display:none;padding:12px;background:#fafafa;border-radius:10px;margin-top:10px;font-size:13px}
+.detail.show{display:block}
+.detail .d-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee}
+.detail .d-row:last-child{border:none}
+.detail .d-label{color:var(--muted)}
+.detail .d-val{font-weight:500;text-align:right;max-width:65%}
+</style>
+</head>
+<body>
+<header>
+  <h1>💻 电脑CPU排行榜</h1>
+  <p>桌面级处理器性能排名 · Cinebench R23</p>
+</header>
+<div class="tabs">
+  <button class="tab active" data-sort="r23mt">R23多核</button>
+  <button class="tab" data-sort="r23st">R23单核</button>
+  <button class="tab" data-sort="gb6cpu">GB6多核</button>
+</div>
+<div class="toolbar">
+  <input id="search" placeholder="搜索CPU型号或厂商...">
+</div>
+<div class="list" id="list"></div>
+
+<script>
+const CPUS=[
+{name:"AMD Ryzen 9 7950X3D",mfr:"AMD",cores:16,threads:32,base:"4.2GHz",boost:"5.7GHz",tdp:120,cache:"144MB",socket:"AM5",r23mt:39500,r23st:2300,gb6cpu:25000,price:4499,note:"X3D缓存加持，游戏性能最强"},
+{name:"Intel Core i9-14900K",mfr:"Intel",cores:24,threads:32,base:"3.2GHz",boost:"6.0GHz",tdp:253,cache:"36MB",socket:"LGA1700",r23mt:41500,r23st:2350,gb6cpu:26000,price:4299,note:"6GHz睿频，单核性能顶尖"},
+{name:"AMD Ryzen 9 7950X",mfr:"AMD",cores:16,threads:32,base:"4.5GHz",boost:"5.7GHz",tdp:170,cache:"80MB",socket:"AM5",r23mt:38500,r23st:2200,gb6cpu:24500,price:3999,note:"16核32线程全能旗舰"},
+{name:"Intel Core i9-13900K",mfr:"Intel",cores:24,threads:32,base:"3.0GHz",boost:"5.8GHz",tdp:253,cache:"36MB",socket:"LGA1700",r23mt:40000,r23st:2250,gb6cpu:25500,price:3999,note:"上一代旗舰，性价比高"},
+{name:"AMD Ryzen 9 7900X3D",mfr:"AMD",cores:12,threads:24,base:"4.4GHz",boost:"5.6GHz",tdp:120,cache:"140MB",socket:"AM5",r23mt:31500,r23st:2250,gb6cpu:21000,price:3299,note:"游戏与生产力兼顾"},
+{name:"AMD Ryzen 7 7800X3D",mfr:"AMD",cores:8,threads:16,base:"4.2GHz",boost:"5.0GHz",tdp:120,cache:"104MB",socket:"AM5",r23mt:24000,r23st:2100,gb6cpu:17500,price:2499,note:"8核游戏神U，X3D缓存"},
+{name:"Intel Core i7-14700K",mfr:"Intel",cores:20,threads:28,base:"3.4GHz",boost:"5.6GHz",tdp:253,cache:"33MB",socket:"LGA1700",r23mt:35500,r23st:2250,gb6cpu:23000,price:2899,note:"20核，生产力强劲"},
+{name:"AMD Ryzen 9 7900X",mfr:"AMD",cores:12,threads:24,base:"4.7GHz",boost:"5.6GHz",tdp:170,cache:"76MB",socket:"AM5",r23mt:30500,r23st:2200,gb6cpu:20500,price:2799,note:"12核高性能"},
+{name:"Intel Core i7-13700K",mfr:"Intel",cores:16,threads:24,base:"3.4GHz",boost:"5.4GHz",tdp:253,cache:"30MB",socket:"LGA1700",r23mt:31000,r23st:2150,gb6cpu:21500,price:2499,note:"13代i7，性价比高"},
+{name:"AMD Ryzen 7 7700X",mfr:"AMD",cores:8,threads:16,base:"4.5GHz",boost:"5.4GHz",tdp:105,cache:"32MB",socket:"AM5",r23mt:22000,r23st:2100,gb6cpu:17000,price:1999,note:"8核主流性能"},
+{name:"Intel Core i5-14600K",mfr:"Intel",cores:14,threads:20,base:"3.5GHz",boost:"5.3GHz",tdp:181,cache:"24MB",socket:"LGA1700",r23mt:26500,r23st:2200,gb6cpu:19000,price:2299,note:"14核，主流优选"},
+{name:"AMD Ryzen 7 5800X3D",mfr:"AMD",cores:8,threads:16,base:"3.4GHz",boost:"4.5GHz",tdp:105,cache:"96MB",socket:"AM4",r23mt:18500,r23st:1600,gb6cpu:14000,price:1599,note:"AM4游戏神U，老平台升级首选"},
+{name:"Intel Core i5-13600K",mfr:"Intel",cores:14,threads:20,base:"3.5GHz",boost:"5.1GHz",tdp:181,cache:"24MB",socket:"LGA1700",r23mt:25500,r23st:2100,gb6cpu:18500,price:1999,note:"13代i5，甜点级性能"},
+{name:"AMD Ryzen 5 7600X",mfr:"AMD",cores:6,threads:12,base:"4.7GHz",boost:"5.3GHz",tdp:105,cache:"32MB",socket:"AM5",r23mt:18500,r23st:2050,gb6cpu:14500,price:1299,note:"6核入门AM5"},
+{name:"Intel Core i5-12600K",mfr:"Intel",cores:10,threads:16,base:"3.7GHz",boost:"4.9GHz",tdp:150,cache:"20MB",socket:"LGA1700",r23mt:21500,r23st:1950,gb6cpu:16000,price:1499,note:"12代i5，经典性价比"},
+{name:"AMD Ryzen 5 7500F",mfr:"AMD",cores:6,threads:12,base:"3.7GHz",boost:"5.0GHz",tdp:65,cache:"32MB",socket:"AM5",r23mt:17000,r23st:1950,gb6cpu:13500,price:999,note:"无核显，65W低功耗"},
+{name:"Intel Core i5-13490F",mfr:"Intel",cores:10,threads:16,base:"2.5GHz",boost:"4.8GHz",tdp:65,cache:"24MB",socket:"LGA1700",r23mt:20500,r23st:1900,gb6cpu:15000,price:1099,note:"小黑盒特供，高性价比"},
+{name:"AMD Ryzen 5 5600",mfr:"AMD",cores:6,threads:12,base:"3.5GHz",boost:"4.4GHz",tdp:65,cache:"35MB",socket:"AM4",r23mt:14500,r23st:1500,gb6cpu:11500,price:799,note:"AM4入门神U"},
+{name:"Intel Core i3-13100",mfr:"Intel",cores:4,threads:8,base:"3.4GHz",boost:"4.5GHz",tdp:60,cache:"12MB",socket:"LGA1700",r23mt:12000,r23st:1700,gb6cpu:9500,price:799,note:"4核入门办公"},
+{name:"AMD Ryzen 5 5500",mfr:"AMD",cores:6,threads:12,base:"3.6GHz",boost:"4.2GHz",tdp:65,cache:"16MB",socket:"AM4",r23mt:12500,r23st:1400,gb6cpu:10000,price:599,note:"AM4最便宜6核"}
+];
+
+const list=document.getElementById('list');
+const search=document.getElementById('search');
+let sortKey='r23mt';
+function rankClass(i){return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}
+function fmt(n){return n>=10000?(n/10000).toFixed(1)+'万':n.toLocaleString()}
+
+function render(){
+  const kw=search.value.trim().toLowerCase();
+  let filtered=CPUS.filter(c=>!kw||c.name.toLowerCase().includes(kw)||c.mfr.toLowerCase().includes(kw)).sort((a,b)=>b[sortKey]-a[sortKey]);
+  if(filtered.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">未找到匹配的CPU</div>';return}
+  list.innerHTML=filtered.map((c,i)=>`
+    <div class="item" onclick="document.getElementById('d-${CPUS.indexOf(c)}').classList.toggle('show')">
+      <div class="row1">
+        <div class="rank ${rankClass(i)}">${i+1}</div>
+        <div class="info">
+          <div class="name">${c.name}</div>
+          <div class="spec">${c.cores}核${c.threads}线程 · ${c.socket}</div>
+        </div>
+        <div class="score">${fmt(c[sortKey])}<small>${sortKey==='r23mt'?'R23多核':sortKey==='r23st'?'R23单核':'GB6多核'}</small></div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-mfr">${c.mfr}</span>
+        <span class="tag tag-core">${c.cores}C${c.threads}T</span>
+        <span class="tag tag-tdp">${c.tdp}W</span>
+      </div>
+      <div class="detail" id="d-${CPUS.indexOf(c)}">
+        <div class="d-row"><span class="d-label">厂商</span><span class="d-val">${c.mfr}</span></div>
+        <div class="d-row"><span class="d-label">核心/线程</span><span class="d-val">${c.cores}核${c.threads}线程</span></div>
+        <div class="d-row"><span class="d-label">基础频率</span><span class="d-val">${c.base}</span></div>
+        <div class="d-row"><span class="d-label">睿频频率</span><span class="d-val">${c.boost}</span></div>
+        <div class="d-row"><span class="d-label">TDP功耗</span><span class="d-val">${c.tdp}W</span></div>
+        <div class="d-row"><span class="d-label">三级缓存</span><span class="d-val">${c.cache}</span></div>
+        <div class="d-row"><span class="d-label">接口</span><span class="d-val">${c.socket}</span></div>
+        <div class="d-row"><span class="d-label">Cinebench R23多核</span><span class="d-val">${fmt(c.r23mt)}</span></div>
+        <div class="d-row"><span class="d-label">Cinebench R23单核</span><span class="d-val">${fmt(c.r23st)}</span></div>
+        <div class="d-row"><span class="d-label">Geekbench6多核</span><span class="d-val">${fmt(c.gb6cpu)}</span></div>
+        <div class="d-row"><span class="d-label">参考价</span><span class="d-val" style="color:#dc2626;font-weight:700">¥${c.price}</span></div>
+        <div class="d-row"><span class="d-label">简评</span><span class="d-val">${c.note}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+search.addEventListener('input',render);
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  sortKey=t.dataset.sort;
+  render();
+}));
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ef4444">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="显卡榜">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>电脑显卡排行榜</title>
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--border:#e5e5e5;--text:#1a1a1a;--muted:#86868b;--brand:#ef4444;--brand-soft:#fee2e2;--gold:#f59e0b;--silver:#94a3b8;--bronze:#b45309}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px;padding-bottom:80px}
+header{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;padding:20px 16px 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(239,68,68,.3)}
+header h1{font-size:18px;font-weight:700}
+header p{font-size:12px;opacity:.85;margin-top:2px}
+.tabs{display:flex;gap:6px;padding:10px 16px;position:sticky;top:64px;background:var(--bg);z-index:99}
+.tab{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;color:var(--muted);text-align:center}
+.tab.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600}
+.toolbar{display:flex;gap:8px;padding:12px 16px;background:var(--bg)}
+.toolbar input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff}
+.list{padding:0 16px}
+.item{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid var(--border);cursor:pointer}
+.item .row1{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rank{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;color:#fff}
+.rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.rank-2{background:linear-gradient(135deg,#94a3b8,#64748b)}
+.rank-3{background:linear-gradient(135deg,#f97316,#b45309)}
+.rank-other{background:var(--brand)}
+.item .info{flex:1;min-width:0}
+.item .name{font-weight:600;font-size:15px}
+.item .spec{font-size:12px;color:var(--muted);margin-top:2px}
+.item .score{font-weight:700;font-size:16px;color:var(--brand);text-align:right;flex-shrink:0}
+.item .score small{display:block;font-size:10px;color:var(--muted);font-weight:400}
+.item .tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tag{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:500}
+.tag-mfr{background:var(--brand-soft);color:#991b1b}
+.tag-vram{background:#dbeafe;color:#1e40af}
+.tag-tdp{background:#fef3c7;color:#92400e}
+.detail{display:none;padding:12px;background:#fafafa;border-radius:10px;margin-top:10px;font-size:13px}
+.detail.show{display:block}
+.detail .d-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee}
+.detail .d-row:last-child{border:none}
+.detail .d-label{color:var(--muted)}
+.detail .d-val{font-weight:500;text-align:right;max-width:65%}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎮 电脑显卡排行榜</h1>
+  <p>桌面级显卡性能排名 · 3DMark Time Spy</p>
+</header>
+<div class="tabs">
+  <button class="tab active" data-sort="ts">Time Spy</button>
+  <button class="tab" data-sort="tsgpu">TS图形分</button>
+  <button class="tab" data-sort="port">光追Port Royal</button>
+</div>
+<div class="toolbar">
+  <input id="search" placeholder="搜索显卡型号或厂商...">
+</div>
+<div class="list" id="list"></div>
+
+<script>
+const GPUS=[
+{name:"NVIDIA RTX 4090",mfr:"NVIDIA",vram:"24GB GDDR6X",core:"16384 CUDA",boost:"2520MHz",tdp:450,bus:"PCIe 4.0",ts:30000,tsgpu:32000,port:19000,price:12999,note:"消费级卡皇，4K光追无压力"},
+{name:"NVIDIA RTX 4080 SUPER",mfr:"NVIDIA",vram:"16GB GDDR6X",core:"10240 CUDA",boost:"2550MHz",tdp:320,bus:"PCIe 4.0",ts:23000,tsgpu:24500,port:15000,price:8499,note:"次旗舰，4K游戏优选"},
+{name:"AMD RX 7900 XTX",mfr:"AMD",vram:"24GB GDDR6",core:"6144 流处理器",boost:"2500MHz",tdp:355,bus:"PCIe 4.0",ts:22000,tsgpu:23500,port:11000,price:7999,note:"AMD旗舰，24GB大显存"},
+{name:"NVIDIA RTX 4080",mfr:"NVIDIA",vram:"16GB GDDR6X",core:"9728 CUDA",boost:"2505MHz",tdp:320,bus:"PCIe 4.0",ts:21500,tsgpu:23000,port:14000,price:9499,note:"上一代次旗舰"},
+{name:"AMD RX 7900 XT",mfr:"AMD",vram:"20GB GDDR6",core:"5376 流处理器",boost:"2400MHz",tdp:315,bus:"PCIe 4.0",ts:19500,tsgpu:20500,port:9500,price:5499,note:"20GB显存，性价比高"},
+{name:"NVIDIA RTX 4070 Ti SUPER",mfr:"NVIDIA",vram:"16GB GDDR6X",core:"8448 CUDA",boost:"2610MHz",tdp:285,bus:"PCIe 4.0",ts:19500,tsgpu:20800,port:12500,price:6499,note:"16GB显存，2K游戏神器"},
+{name:"NVIDIA RTX 4070 Ti",mfr:"NVIDIA",vram:"12GB GDDR6X",core:"7680 CUDA",boost:"2610MHz",tdp:285,bus:"PCIe 4.0",ts:18000,tsgpu:19200,port:11500,price:6499,note:"上一代甜点卡"},
+{name:"NVIDIA RTX 4070 SUPER",mfr:"NVIDIA",vram:"12GB GDDR6X",core:"7168 CUDA",boost:"2475MHz",tdp:220,bus:"PCIe 4.0",ts:17000,tsgpu:18200,port:11000,price:4899,note:"2K游戏高性价比"},
+{name:"AMD RX 7800 XT",mfr:"AMD",vram:"16GB GDDR6",core:"3840 流处理器",boost:"2430MHz",tdp:263,bus:"PCIe 4.0",ts:15500,tsgpu:16500,port:7500,price:3799,note:"16GB显存，2K甜点"},
+{name:"NVIDIA RTX 4070",mfr:"NVIDIA",vram:"12GB GDDR6X",core:"5888 CUDA",boost:"2475MHz",tdp:200,bus:"PCIe 4.0",ts:15000,tsgpu:16000,port:9800,price:4499,note:"2K游戏入门"},
+{name:"AMD RX 7700 XT",mfr:"AMD",vram:"12GB GDDR6",core:"3456 流处理器",boost:"2544MHz",tdp:245,bus:"PCIe 4.0",ts:14000,tsgpu:14800,port:6800,price:3199,note:"1080P/2K游戏"},
+{name:"NVIDIA RTX 4060 Ti 16GB",mfr:"NVIDIA",vram:"16GB GDDR6",core:"4352 CUDA",boost:"2535MHz",tdp:165,bus:"PCIe 4.0",ts:12000,tsgpu:12800,port:7800,price:3399,note:"16GB显存，AI创作友好"},
+{name:"NVIDIA RTX 4060 Ti",mfr:"NVIDIA",vram:"8GB GDDR6",core:"4352 CUDA",boost:"2535MHz",tdp:160,bus:"PCIe 4.0",ts:11800,tsgpu:12600,port:7700,price:2999,note:"1080P高刷游戏"},
+{name:"AMD RX 7600 XT",mfr:"AMD",vram:"16GB GDDR6",core:"2048 流处理器",boost:"2755MHz",tdp:165,bus:"PCIe 4.0",ts:10500,tsgpu:11200,port:5200,price:2399,note:"16GB大显存入门卡"},
+{name:"NVIDIA RTX 4060",mfr:"NVIDIA",vram:"8GB GDDR6",core:"3072 CUDA",boost:"2460MHz",tdp:115,bus:"PCIe 4.0",ts:10000,tsgpu:10700,port:6500,price:2399,note:"1080P主流游戏"},
+{name:"AMD RX 7600",mfr:"AMD",vram:"8GB GDDR6",core:"2048 流处理器",boost:"2655MHz",tdp:165,bus:"PCIe 4.0",ts:9200,tsgpu:9800,port:4500,price:1899,note:"入门AMD显卡"},
+{name:"NVIDIA RTX 4050",mfr:"NVIDIA",vram:"6GB GDDR6",core:"2304 CUDA",boost:"2460MHz",tdp:115,bus:"PCIe 4.0",ts:7500,tsgpu:8000,port:4800,price:1599,note:"入门级光追卡"},
+{name:"AMD RX 6600",mfr:"AMD",vram:"8GB GDDR6",core:"1792 流处理器",boost:"2491MHz",tdp:132,bus:"PCIe 4.0",ts:7200,tsgpu:7700,port:2800,price:1299,note:"1080P性价比"},
+{name:"NVIDIA RTX 3050",mfr:"NVIDIA",vram:"8GB GDDR6",core:"2560 CUDA",boost:"1777MHz",tdp:130,bus:"PCIe 4.0",ts:6500,tsgpu:7000,port:3200,price:1199,note:"入门光追"},
+{name:"AMD RX 6500 XT",mfr:"AMD",vram:"4GB GDDR6",core:"1024 流处理器",boost:"2815MHz",tdp:107,bus:"PCIe 4.0",ts:4200,tsgpu:4500,port:1500,price:799,note:"亮机卡级别"}
+];
+
+const list=document.getElementById('list');
+const search=document.getElementById('search');
+let sortKey='ts';
+function rankClass(i){return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}
+function fmt(n){return n>=10000?(n/10000).toFixed(1)+'万':n.toLocaleString()}
+
+function render(){
+  const kw=search.value.trim().toLowerCase();
+  let filtered=GPUS.filter(g=>!kw||g.name.toLowerCase().includes(kw)||g.mfr.toLowerCase().includes(kw)).sort((a,b)=>b[sortKey]-a[sortKey]);
+  if(filtered.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">未找到匹配的显卡</div>';return}
+  list.innerHTML=filtered.map((g,i)=>`
+    <div class="item" onclick="document.getElementById('d-${GPUS.indexOf(g)}').classList.toggle('show')">
+      <div class="row1">
+        <div class="rank ${rankClass(i)}">${i+1}</div>
+        <div class="info">
+          <div class="name">${g.name}</div>
+          <div class="spec">${g.vram} · ${g.core.split(' ')[0]}核心</div>
+        </div>
+        <div class="score">${fmt(g[sortKey])}<small>${sortKey==='ts'?'Time Spy':sortKey==='tsgpu'?'TS图形分':'Port Royal'}</small></div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-mfr">${g.mfr}</span>
+        <span class="tag tag-vram">${g.vram}</span>
+        <span class="tag tag-tdp">${g.tdp}W</span>
+      </div>
+      <div class="detail" id="d-${GPUS.indexOf(g)}">
+        <div class="d-row"><span class="d-label">厂商</span><span class="d-val">${g.mfr}</span></div>
+        <div class="d-row"><span class="d-label">显存</span><span class="d-val">${g.vram}</span></div>
+        <div class="d-row"><span class="d-label">核心</span><span class="d-val">${g.core}</span></div>
+        <div class="d-row"><span class="d-label">加速频率</span><span class="d-val">${g.boost}</span></div>
+        <div class="d-row"><span class="d-label">TDP功耗</span><span class="d-val">${g.tdp}W</span></div>
+        <div class="d-row"><span class="d-label">总线接口</span><span class="d-val">${g.bus}</span></div>
+        <div class="d-row"><span class="d-label">3DMark Time Spy</span><span class="d-val">${fmt(g.ts)}</span></div>
+        <div class="d-row"><span class="d-label">TS图形分</span><span class="d-val">${fmt(g.tsgpu)}</span></div>
+        <div class="d-row"><span class="d-label">Port Royal光追</span><span class="d-val">${fmt(g.port)}</span></div>
+        <div class="d-row"><span class="d-label">参考价</span><span class="d-val" style="color:#dc2626;font-weight:700">¥${g.price}</span></div>
+        <div class="d-row"><span class="d-label">简评</span><span class="d-val">${g.note}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+search.addEventListener('input',render);
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  sortKey=t.dataset.sort;
+  render();
+}));
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>

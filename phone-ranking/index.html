@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#6366f1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="手机性能榜">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>手机性能排行榜</title>
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--border:#e5e5e5;--text:#1a1a1a;--muted:#86868b;--brand:#6366f1;--brand-soft:#eef2ff;--gold:#f59e0b;--silver:#94a3b8;--bronze:#b45309;--green:#10b981;--blue:#3b82f6}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px;padding-bottom:80px}
+header{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:20px 16px 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(99,102,241,.3)}
+header h1{font-size:18px;font-weight:700}
+header p{font-size:12px;opacity:.85;margin-top:2px}
+.toolbar{display:flex;gap:8px;padding:12px 16px;position:sticky;top:64px;background:var(--bg);z-index:99}
+.toolbar input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff}
+.toolbar select{padding:10px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:#fff;color:var(--text)}
+.list{padding:0 16px}
+.phone{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+.phone:active{transform:scale(.98)}
+.phone .row1{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rank{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;color:#fff}
+.rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.rank-2{background:linear-gradient(135deg,#94a3b8,#64748b)}
+.rank-3{background:linear-gradient(135deg,#f97316,#b45309)}
+.rank-other{background:var(--brand)}
+.phone .info{flex:1;min-width:0}
+.phone .name{font-weight:600;font-size:15px}
+.phone .soc{font-size:12px;color:var(--muted);margin-top:2px}
+.phone .score{font-weight:700;font-size:16px;color:var(--brand);text-align:right;flex-shrink:0}
+.phone .score small{display:block;font-size:10px;color:var(--muted);font-weight:400}
+.phone .tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tag{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:500}
+.tag-soc{background:var(--brand-soft);color:var(--brand)}
+.tag-price{background:#fef3c7;color:#92400e}
+.tag-ram{background:#dbeafe;color:#1e40af}
+.detail{display:none;padding:12px;background:#fafafa;border-radius:10px;margin-top:10px;font-size:13px}
+.detail.show{display:block}
+.detail .d-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee}
+.detail .d-row:last-child{border:none}
+.detail .d-label{color:var(--muted)}
+.detail .d-val{font-weight:500;text-align:right;max-width:60%}
+.filter-btn{padding:8px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;font-size:12px;color:var(--muted);cursor:pointer}
+.filter-btn.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.install-hint{position:fixed;bottom:16px;left:16px;right:16px;background:rgba(0,0,0,.8);color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;text-align:center;display:none;z-index:1000}
+</style>
+</head>
+<body>
+<header>
+  <h1>📱 手机性能排行榜</h1>
+  <p>2024-2025 主流旗舰 · 安兔兔跑分排名</p>
+</header>
+<div class="toolbar">
+  <input id="search" placeholder="搜索手机型号或品牌...">
+  <select id="brandFilter"><option value="">全部品牌</option></select>
+</div>
+<div class="toolbar" style="top:64px;overflow-x:auto;white-space:nowrap" id="priceFilter">
+  <button class="filter-btn active" data-price="all">全部价位</button>
+  <button class="filter-btn" data-price="0-3000">3000以下</button>
+  <button class="filter-btn" data-price="3000-5000">3000-5000</button>
+  <button class="filter-btn" data-price="5000-8000">5000-8000</button>
+  <button class="filter-btn" data-price="8000">8000以上</button>
+</div>
+<div class="list" id="list"></div>
+<div class="install-hint" id="installHint">点浏览器菜单「添加到桌面」可安装为APP</div>
+
+<script>
+const PHONES=[
+{name:"iPhone 16 Pro Max",brand:"苹果",soc:"Apple A18 Pro",antutu:2100000,gb6cpu:3300,gb6gpu:5100,ram:"8GB",storage:"256GB-1TB",display:"6.9英寸 LTPO OLED 120Hz",battery:"4685mAh",camera:"4800万主摄+4800万长焦+1200万超广角",price:9999,release:"2024-09"},
+{name:"iPhone 16 Pro",brand:"苹果",soc:"Apple A18 Pro",antutu:1950000,gb6cpu:3300,gb6gpu:5100,ram:"8GB",storage:"128GB-1TB",display:"6.3英寸 LTPO OLED 120Hz",battery:"3582mAh",camera:"4800万主摄+4800万长焦+1200万超广角",price:7999,release:"2024-09"},
+{name:"小米14 Ultra",brand:"小米",soc:"骁龙8 Gen3",antutu:2100000,gb6cpu:2200,gb6gpu:3100,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.73英寸 LTPO OLED 120Hz",battery:"5300mAh",camera:"5000万主摄+5000万长焦+5000万超广角+5000万潜望",price:6499,release:"2024-02"},
+{name:"华为 Mate 60 Pro+",brand:"华为",soc:"麒麟9000S",antutu:900000,gb6cpu:1400,gb6gpu:1800,ram:"16GB",storage:"512GB-1TB",display:"6.82英寸 LTPO OLED 120Hz",battery:"5000mAh",camera:"4800万主摄+4000万长焦+4800万超广角",price:8999,release:"2023-09"},
+{name:"vivo X100 Pro",brand:"vivo",soc:"天玑9300",antutu:2250000,gb6cpu:2250,gb6gpu:3200,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.78英寸 LTPO OLED 120Hz",battery:"5400mAh",camera:"5000万主摄+5000万长焦+5000万超广角",price:4999,release:"2023-11"},
+{name:"OPPO Find X7 Ultra",brand:"OPPO",soc:"骁龙8 Gen3",antutu:2050000,gb6cpu:2200,gb6gpu:3100,ram:"12GB-16GB",storage:"256GB-512GB",display:"6.82英寸 LTPO OLED 120Hz",battery:"5000mAh",camera:"5000万主摄+5000万潜望+5000万超广角+5000万长焦",price:5999,release:"2024-01"},
+{name:"一加 12",brand:"一加",soc:"骁龙8 Gen3",antutu:2080000,gb6cpu:2200,gb6gpu:3100,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.82英寸 LTPO OLED 120Hz",battery:"5400mAh",camera:"5000万主摄+6400万长焦+4800万超广角",price:4299,release:"2023-12"},
+{name:"三星 Galaxy S24 Ultra",brand:"三星",soc:"骁龙8 Gen3",antutu:2000000,gb6cpu:2300,gb6gpu:3100,ram:"12GB",storage:"256GB-1TB",display:"6.8英寸 LTPO AMOLED 120Hz",battery:"5000mAh",camera:"2亿主摄+5000万长焦+1200万超广角+1000万长焦",price:9699,release:"2024-01"},
+{name:"荣耀 Magic6 Pro",brand:"荣耀",soc:"骁龙8 Gen3",antutu:2050000,gb6cpu:2200,gb6gpu:3050,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.8英寸 LTPO OLED 120Hz",battery:"5600mAh",camera:"5000万主摄+1.8亿潜望+5000万超广角",price:5699,release:"2024-01"},
+{name:"小米14",brand:"小米",soc:"骁龙8 Gen3",antutu:1750000,gb6cpu:2150,gb6gpu:3000,ram:"8GB-16GB",storage:"256GB-512GB",display:"6.36英寸 OLED 120Hz",battery:"4610mAh",camera:"5000万主摄+5000万长焦+5000万超广角",price:3999,release:"2023-11"},
+{name:"iPhone 15 Pro Max",brand:"苹果",soc:"Apple A17 Pro",antutu:1580000,gb6cpu:3000,gb6gpu:4600,ram:"8GB",storage:"256GB-1TB",display:"6.7英寸 LTPO OLED 120Hz",battery:"4441mAh",camera:"4800万主摄+1200万长焦+1200万超广角",price:9999,release:"2023-09"},
+{name:"Redmi K70 Pro",brand:"红米",soc:"骁龙8 Gen3",antutu:2000000,gb6cpu:2150,gb6gpu:3050,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.67英寸 2K OLED 120Hz",battery:"5000mAh",camera:"5000万主摄+5000万长焦+1200万超广角",price:3299,release:"2023-11"},
+{name:"realme GT5 Pro",brand:"realme",soc:"骁龙8 Gen3",antutu:2050000,gb6cpu:2180,gb6gpu:3080,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.78英寸 1.5K OLED 144Hz",battery:"5400mAh",camera:"5000万主摄+5000万长焦+800万超广角",price:3399,release:"2023-12"},
+{name:"iQOO 12 Pro",brand:"iQOO",soc:"骁龙8 Gen3",antutu:2100000,gb6cpu:2200,gb6gpu:3100,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.78英寸 1.5K OLED 144Hz",battery:"5100mAh",camera:"5000万主摄+6400万长焦+5000万超广角",price:4999,release:"2023-11"},
+{name:"魅族 21 Pro",brand:"魅族",soc:"骁龙8 Gen3",antutu:1950000,gb6cpu:2150,gb6gpu:3000,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.79英寸 LTPO OLED 120Hz",battery:"5050mAh",camera:"5000万主摄+5000万长焦+1300万超广角",price:4999,release:"2024-04"},
+{name:"华为 Pura 70 Ultra",brand:"华为",soc:"麒麟9010",antutu:1000000,gb6cpu:1500,gb6gpu:1900,ram:"12GB-16GB",storage:"512GB-1TB",display:"6.8英寸 LTPO OLED 120Hz",battery:"5200mAh",camera:"1英寸主摄+4800万长焦+4000万超广角",price:9999,release:"2024-04"},
+{name:"谷歌 Pixel 8 Pro",brand:"谷歌",soc:"Tensor G3",antutu:1050000,gb6cpu:1700,gb6gpu:2100,ram:"12GB",storage:"128GB-1TB",display:"6.7英寸 LTPO OLED 120Hz",battery:"5050mAh",camera:"5000万主摄+4800万长焦+4800万超广角",price:7999,release:"2023-10"},
+{name:"iPhone 16",brand:"苹果",soc:"Apple A18",antutu:1650000,gb6cpu:3100,gb6gpu:4200,ram:"8GB",storage:"128GB-512GB",display:"6.1英寸 OLED 60Hz",battery:"3561mAh",camera:"4800万主摄+1200万超广角",price:5999,release:"2024-09"},
+{name:"Redmi K70",brand:"红米",soc:"骁龙8 Gen2",antutu:1500000,gb6cpu:1900,gb6gpu:2600,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.67英寸 2K OLED 120Hz",battery:"5000mAh",camera:"5000万主摄+800万长焦+1200万超广角",price:2499,release:"2023-11"},
+{name:"一加 Ace 3 Pro",brand:"一加",soc:"骁龙8 Gen3",antutu:1980000,gb6cpu:2150,gb6gpu:3050,ram:"12GB-16GB",storage:"256GB-1TB",display:"6.78英寸 1.5K OLED 120Hz",battery:"6100mAh",camera:"5000万主摄+800万超广角+200万微距",price:3199,release:"2024-06"}
+];
+
+const list=document.getElementById('list');
+const search=document.getElementById('search');
+const brandFilter=document.getElementById('brandFilter');
+let activePrice='all';
+
+const brands=[...new Set(PHONES.map(p=>p.brand))];
+brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;brandFilter.appendChild(o)});
+
+function rankClass(i){return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}
+function fmt(n){return n>=10000?(n/10000).toFixed(1)+'万':n.toLocaleString()}
+
+function render(){
+  const kw=search.value.trim().toLowerCase();
+  const bf=brandFilter.value;
+  let filtered=PHONES.filter(p=>{
+    const matchKw=!kw||p.name.toLowerCase().includes(kw)||p.brand.toLowerCase().includes(kw)||p.soc.toLowerCase().includes(kw);
+    const matchBrand=!bf||p.brand===bf;
+    let matchPrice=true;
+    if(activePrice!=='all'){
+      if(activePrice==='0-3000')matchPrice=p.price<3000;
+      else if(activePrice==='3000-5000')matchPrice=p.price>=3000&&p.price<5000;
+      else if(activePrice==='5000-8000')matchPrice=p.price>=5000&&p.price<8000;
+      else matchPrice=p.price>=8000;
+    }
+    return matchKw&&matchBrand&&matchPrice;
+  }).sort((a,b)=>b.antutu-a.antutu);
+
+  if(filtered.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">未找到匹配的手机</div>';return}
+
+  list.innerHTML=filtered.map((p,i)=>`
+    <div class="phone" onclick="toggleDetail(${PHONES.indexOf(p)})">
+      <div class="row1">
+        <div class="rank ${rankClass(i)}">${i+1}</div>
+        <div class="info">
+          <div class="name">${p.name}</div>
+          <div class="soc">${p.soc} · ${p.ram}</div>
+        </div>
+        <div class="score">${fmt(p.antutu)}<small>安兔兔跑分</small></div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-soc">${p.soc.split(' ')[0]}</span>
+        <span class="tag tag-ram">${p.ram}</span>
+        <span class="tag tag-price">¥${p.price}起</span>
+      </div>
+      <div class="detail" id="d-${PHONES.indexOf(p)}">
+        <div class="d-row"><span class="d-label">处理器</span><span class="d-val">${p.soc}</span></div>
+        <div class="d-row"><span class="d-label">内存</span><span class="d-val">${p.ram}</span></div>
+        <div class="d-row"><span class="d-label">存储</span><span class="d-val">${p.storage}</span></div>
+        <div class="d-row"><span class="d-label">屏幕</span><span class="d-val">${p.display}</span></div>
+        <div class="d-row"><span class="d-label">电池</span><span class="d-val">${p.battery}</span></div>
+        <div class="d-row"><span class="d-label">摄像头</span><span class="d-val">${p.camera}</span></div>
+        <div class="d-row"><span class="d-label">Geekbench6 CPU</span><span class="d-val">${fmt(p.gb6cpu)}</span></div>
+        <div class="d-row"><span class="d-label">Geekbench6 GPU</span><span class="d-val">${fmt(p.gb6gpu)}</span></div>
+        <div class="d-row"><span class="d-label">发布时间</span><span class="d-val">${p.release}</span></div>
+        <div class="d-row"><span class="d-label">起售价</span><span class="d-val" style="color:#dc2626;font-weight:700">¥${p.price}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleDetail(i){
+  const el=document.getElementById('d-'+i);
+  if(el)el.classList.toggle('show');
+}
+
+search.addEventListener('input',render);
+brandFilter.addEventListener('change',render);
+document.querySelectorAll('.filter-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  activePrice=b.dataset.price;
+  render();
+}));
+render();
+
+// PWA
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
