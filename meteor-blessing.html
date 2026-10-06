@@ -595,34 +595,28 @@
 
   // ====== 云端存储 ======
   const CLOUD_API = 'https://api.restful-api.dev/objects';
-  const CLOUD_TAG = 'meteor-wish';
+  const STORE_ID = 'ff808181a09d98f701a111ddfc4d0ac2';
+  function getCloudStore() {
+    return fetch(`${CLOUD_API}/${STORE_ID}`).then(r => r.json()).then(o => (o.data && o.data.wishes) || []).catch(() => []);
+  }
   function sendToCloud(text) {
-    try {
-      fetch(CLOUD_API, {
-        method: 'POST',
+    getCloudStore().then(wishes => {
+      wishes.unshift({ text: text, time: Date.now() });
+      if (wishes.length > 500) wishes.length = 500;
+      fetch(`${CLOUD_API}/${STORE_ID}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: CLOUD_TAG,
-          data: { text: text, time: Date.now() }
-        })
+        body: JSON.stringify({ name: 'meteor-wishes-store', data: { wishes: wishes } })
       }).catch(() => {});
-    } catch(e) {}
+    }).catch(() => {});
   }
   function fetchCloudWishes() {
-    try {
-      fetch(CLOUD_API)
-        .then(r => r.json())
-        .then(list => {
-          const wishes = (list || [])
-            .filter(o => o && o.name === CLOUD_TAG && o.data && o.data.text)
-            .sort((a,b) => (b.data.time||0) - (a.data.time||0))
-            .slice(0, 8);
-          wishes.forEach((w, i) => {
-            setTimeout(() => launchBlessing(w.data.text), i * 1500 + 1000);
-          });
-        })
-        .catch(() => {});
-    } catch(e) {}
+    getCloudStore().then(wishes => {
+      const recent = wishes.slice(0, 8);
+      recent.forEach((w, i) => {
+        setTimeout(() => launchBlessing(w.text), i * 1500 + 1000);
+      });
+    }).catch(() => {});
   }
 
   function sendBlessing() {
