@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>流星雨 · 愿望管理后台</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #0b0b2a 0%, #1a1140 50%, #2d1b5e 100%);
+    min-height: 100vh;
+    color: #fff;
+    padding: 20px;
+  }
+  /* 登录页 */
+  .login-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .login-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+  .login-card h1 {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    background: linear-gradient(180deg, #fff, #b8c8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .login-card p { color: rgba(200,210,255,0.6); font-size: 13px; margin-bottom: 24px; }
+  .login-card input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    margin-bottom: 16px;
+  }
+  .login-card input:focus { border-color: rgba(150,180,255,0.6); }
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #6a8bff, #a855f7);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .login-btn:active { transform: scale(0.97); }
+  .login-err { color: #ff8a8a; font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+  /* 后台主页 */
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .admin-header h1 {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    background: linear-gradient(180deg, #fff, #b8c8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 9px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
+    color: #fff;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn-primary { background: linear-gradient(135deg, #6a8bff, #a855f7); }
+  .btn-danger { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
+  .btn-ghost { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-card .num {
+    font-size: 28px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #fff, #a8c8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat-card .label { font-size: 12px; color: rgba(200,210,255,0.6); margin-top: 4px; }
+
+  .wish-list {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .wish-item {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.2s;
+  }
+  .wish-item:last-child { border-bottom: none; }
+  .wish-item:hover { background: rgba(255,255,255,0.04); }
+  .wish-text { flex: 1; font-size: 15px; line-height: 1.5; word-break: break-word; }
+  .wish-meta {
+    flex-shrink: 0;
+    text-align: right;
+    color: rgba(200,210,255,0.5);
+    font-size: 12px;
+    min-width: 100px;
+  }
+  .wish-del {
+    flex-shrink: 0;
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: rgba(255,100,100,0.15);
+    border: 1px solid rgba(255,100,100,0.3);
+    color: #ff8a8a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: background 0.2s;
+  }
+  .wish-del:hover { background: rgba(255,100,100,0.3); }
+
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: rgba(200,210,255,0.5);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: rgba(200,210,255,0.6);
+  }
+  .spinner {
+    display: inline-block;
+    width: 30px; height: 30px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: #a855f7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed;
+    top: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="loginView" class="login-wrap">
+  <div class="login-card">
+    <h1>流星雨后台</h1>
+    <p>请输入管理密码</p>
+    <input type="password" id="pwdInput" placeholder="管理密码" autofocus>
+    <button class="login-btn" onclick="doLogin()">登 录</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- 后台主页 -->
+<div id="adminView" style="display:none; max-width: 900px; margin: 0 auto;">
+  <div class="admin-header">
+    <h1>🌠 愿望管理后台</h1>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="loadWishes()">🔄 刷新</button>
+      <button class="btn btn-ghost" onclick="exportWishes()">📥 导出</button>
+      <button class="btn btn-danger" onclick="clearAll()">🗑 清空</button>
+      <button class="btn btn-ghost" onclick="logout()">退出</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">总愿望数</div></div>
+    <div class="stat-card"><div class="num" id="statToday">0</div><div class="label">今日新增</div></div>
+    <div class="stat-card"><div class="num" id="statWeek">0</div><div class="label">近7天</div></div>
+    <div class="stat-card"><div class="num" id="statUnique">0</div><div class="label">去重后</div></div>
+  </div>
+
+  <div class="wish-list" id="wishList">
+    <div class="loading"><div class="spinner"></div>加载中...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const CLOUD_API = 'https://api.restful-api.dev/objects';
+  const CLOUD_TAG = 'meteor-wish';
+  const PASSWORD = 'meteor2024'; // 默认密码，可修改
+  const AUTH_KEY = 'meteor_admin_auth';
+
+  let allWishes = [];
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  function doLogin() {
+    const pwd = document.getElementById('pwdInput').value;
+    if (pwd === PASSWORD) {
+      sessionStorage.setItem(AUTH_KEY, '1');
+      enterAdmin();
+    } else {
+      document.getElementById('loginErr').textContent = '密码错误，请重试';
+    }
+  }
+  document.getElementById('pwdInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  function logout() {
+    sessionStorage.removeItem(AUTH_KEY);
+    document.getElementById('adminView').style.display = 'none';
+    document.getElementById('loginView').style.display = 'flex';
+    document.getElementById('pwdInput').value = '';
+  }
+
+  function enterAdmin() {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('adminView').style.display = 'block';
+    loadWishes();
+  }
+
+  if (sessionStorage.getItem(AUTH_KEY) === '1') {
+    enterAdmin();
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '-';
+    const d = new Date(ts);
+    const pad = n => n < 10 ? '0' + n : n;
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  async function loadWishes() {
+    const list = document.getElementById('wishList');
+    list.innerHTML = '<div class="loading"><div class="spinner"></div>加载中...</div>';
+    try {
+      const res = await fetch(CLOUD_API);
+      const data = await res.json();
+      allWishes = (data || [])
+        .filter(o => o && o.name === CLOUD_TAG && o.data && o.data.text)
+        .sort((a,b) => (b.data.time||0) - (a.data.time||0));
+      renderWishes();
+      updateStats();
+    } catch(e) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div>加载失败，请检查网络后刷新</div>';
+    }
+  }
+
+  function updateStats() {
+    const now = Date.now();
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const weekAgo = now - 7 * 24 * 3600 * 1000;
+    const texts = new Set();
+    let today = 0, week = 0;
+    allWishes.forEach(w => {
+      const t = w.data.time || 0;
+      if (t >= todayStart.getTime()) today++;
+      if (t >= weekAgo) week++;
+      texts.add(w.data.text);
+    });
+    document.getElementById('statTotal').textContent = allWishes.length;
+    document.getElementById('statToday').textContent = today;
+    document.getElementById('statWeek').textContent = week;
+    document.getElementById('statUnique').textContent = texts.size;
+  }
+
+  function renderWishes() {
+    const list = document.getElementById('wishList');
+    if (allWishes.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">🌟</div>还没有用户留下愿望<br>分享页面给朋友们吧～</div>';
+      return;
+    }
+    list.innerHTML = allWishes.map(w => `
+      <div class="wish-item" data-id="${w.id}">
+        <div class="wish-text">${escapeHtml(w.data.text)}</div>
+        <div class="wish-meta">${formatTime(w.data.time)}</div>
+        <button class="wish-del" onclick="delWish('${w.id}')">✕</button>
+      </div>
+    `).join('');
+  }
+
+  async function delWish(id) {
+    if (!confirm('确定删除这条愿望吗？')) return;
+    try {
+      await fetch(`${CLOUD_API}/${id}`, { method: 'DELETE' });
+      allWishes = allWishes.filter(w => w.id !== id);
+      renderWishes();
+      updateStats();
+      showToast('已删除');
+    } catch(e) {
+      showToast('删除失败');
+    }
+  }
+
+  async function clearAll() {
+    if (allWishes.length === 0) { showToast('没有可清空的愿望'); return; }
+    if (!confirm(`确定清空全部 ${allWishes.length} 条愿望吗？此操作不可恢复！`)) return;
+    let success = 0;
+    for (const w of allWishes) {
+      try {
+        await fetch(`${CLOUD_API}/${w.id}`, { method: 'DELETE' });
+        success++;
+      } catch(e) {}
+    }
+    showToast(`已清空 ${success} 条愿望`);
+    loadWishes();
+  }
+
+  function exportWishes() {
+    if (allWishes.length === 0) { showToast('没有数据可导出'); return; }
+    const data = allWishes.map(w => ({
+      text: w.data.text,
+      time: formatTime(w.data.time),
+      timestamp: w.data.time
+    }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `meteor-wishes-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('已导出');
+  }
+</script>
+</body>
+</html>
