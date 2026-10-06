@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0FDC78">
+<meta name="description" content="实时查询全国高铁、大巴、机票路线，智能推荐最佳方案，附车费构成明细">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="交通票务">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>全国交通票务查询平台</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --border: #e4e7eb;
+    --text: #1f2329;
+    --text-muted: #646a73;
+    --brand: #0FDC78;
+    --brand-strong: #0AB861;
+    --brand-soft: #E5FFF2;
+    --warning: #EFAA17;
+    --danger: #E8463A;
+    --rail: #1D4ED8;
+    --bus: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; }
+  .app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 16px; }
+  header .logo { font-weight: 600; font-size: 16px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  header .logo .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--brand); }
+  header .meta { color: var(--text-muted); font-size: 12px; }
+  header .badge { background: var(--brand-soft); color: var(--brand-strong); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; overflow: hidden; }
+  .panel { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 16px; }
+  .panel h2 { font-size: 14px; margin: 0 0 12px 0; font-weight: 600; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; color: var(--text);
+  }
+  .swap-row { display: grid; grid-template-columns: 1fr 36px 1fr; gap: 8px; align-items: end; }
+  .swap-btn { background: var(--brand-soft); border: 1px solid var(--brand); color: var(--brand-strong); border-radius: 6px; height: 36px; cursor: pointer; font-size: 14px; }
+  .swap-btn:hover { background: var(--brand); color: #fff; }
+  .submit-btn {
+    width: 100%; padding: 10px; background: var(--brand); color: #004D26; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px;
+  }
+  .submit-btn:hover { background: var(--brand-strong); color: #fff; }
+  .submit-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+  .type-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .type-tabs button { flex: 1; padding: 7px 0; border: 1px solid var(--border); background: #fff; border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--text-muted); }
+  .type-tabs button.active { border-color: var(--brand); color: var(--brand-strong); background: var(--brand-soft); font-weight: 500; }
+
+  .legend { background: var(--bg); padding: 10px; border-radius: 6px; font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.6; }
+  .legend .row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .map-wrap { position: relative; }
+  #map { height: 100%; width: 100%; background: #eef1f4; }
+
+  .results-overlay {
+    position: absolute; right: 16px; top: 16px; bottom: 16px; width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden;
+  }
+  .results-overlay .head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .results-overlay .head .sub { font-weight: 400; color: var(--text-muted); font-size: 12px; }
+  .results-overlay .body { flex: 1; overflow-y: auto; padding: 8px; }
+  .results-overlay .empty { color: var(--text-muted); font-size: 12px; padding: 40px 16px; text-align: center; line-height: 1.7; }
+
+  .ticket { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; background: #fff; cursor: pointer; transition: border-color .15s; }
+  .ticket:hover { border-color: var(--brand); }
+  .ticket .row1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .ticket .times { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+  .ticket .times .arrow { color: var(--text-muted); font-weight: 400; }
+  .ticket .price { color: var(--danger); font-weight: 600; font-size: 14px; }
+  .ticket .row2 { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+  .ticket .tag { padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .tag-rail { background: #dbeafe; color: var(--rail); }
+  .tag-bus { background: #dcfce7; color: var(--bus); }
+  .tag-flight { background: #fef3c7; color: #b45309; }
+  .tag-ok { background: var(--brand-soft); color: var(--brand-strong); }
+  .tag-no { background: #fee2e2; color: var(--danger); }
+  .tag-few { background: #fef3c7; color: #b45309; }
+
+  .city-marker { display: flex; align-items: center; justify-content: center; }
+  .city-pin { background: var(--brand); color: #004D26; border: 2px solid #fff; border-radius: 50%; width: 14px; height: 14px; box-shadow: 0 0 0 2px var(--brand); }
+  .city-pin.hub { width: 18px; height: 18px; background: var(--brand-strong); color: #fff; }
+  .leaflet-popup-content { margin: 8px 12px; font-size: 12px; }
+  .leaflet-popup-content strong { font-size: 13px; color: var(--text); }
+  .leaflet-popup-content .pop-row { color: var(--text-muted); margin: 2px 0; }
+
+  .toast { position: absolute; bottom: 16px; left: 16px; background: rgba(0,0,0,0.8); color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 12px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 9999; }
+  .toast.show { opacity: 1; }
+
+  .reco-card { border: 2px solid var(--brand); background: var(--brand-soft); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+  .reco-card .label { font-size: 11px; color: var(--brand-strong); font-weight: 600; letter-spacing: .5px; }
+  .reco-card .title { font-size: 15px; font-weight: 600; color: var(--text); margin: 4px 0; }
+  .reco-card .reason { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  .compare-tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; }
+  .compare-tbl th, .compare-tbl td { padding: 7px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+  .compare-tbl th { color: var(--text-muted); font-weight: 500; font-size: 11px; background: var(--bg); }
+  .compare-tbl td.score { font-weight: 600; color: var(--brand-strong); }
+  .compare-tbl tr.best td { background: var(--brand-soft); }
+  .compare-tbl tr.best td.score { color: var(--brand-strong); }
+
+  .free-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+  .free-input:focus { outline: none; border-color: var(--brand); }
+  .mode-toggle { display: flex; gap: 6px; margin-bottom: 12px; background: var(--bg); padding: 3px; border-radius: 6px; }
+  .mode-toggle button { flex: 1; padding: 6px; border: none; background: transparent; border-radius: 4px; font-size: 12px; cursor: pointer; color: var(--text-muted); }
+  .mode-toggle button.active { background: #fff; color: var(--text); font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+
+  .route-line { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 8px 10px; background: var(--bg); border-radius: 6px; margin-bottom: 8px; }
+  .route-line .stop { padding: 2px 8px; background: #fff; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; }
+  .route-line .arrow { color: var(--text-muted); }
+
+  /* 地图折叠按钮 */
+  .map-toggle { position: absolute; top: 12px; left: 12px; z-index: 1000; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 6px; }
+  .map-toggle:hover { border-color: var(--brand); color: var(--brand-strong); }
+  .map-toggle .icon { display: inline-block; transition: transform .25s; }
+  .map-wrap.collapsed .map-toggle .icon { transform: rotate(-90deg); }
+  .map-wrap.collapsed #map { display: none; }
+  .map-wrap.collapsed::before { content: '🗺️ 地图已折叠 · 点击右上角按钮展开'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--text-muted); font-size: 13px; }
+  .map-wrap.collapsed .results-overlay { width: calc(100% - 32px) !important; max-width: none !important; }
+
+  /* 车费明细展开 */
+  .ticket { position: relative; }
+  .ticket .fee-toggle { background: none; border: none; color: var(--brand-strong); font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+  .ticket .fee-toggle:hover { background: var(--brand-soft); }
+  .fees-detail { margin-top: 8px; padding: 8px 10px; background: var(--bg); border-radius: 6px; font-size: 12px; display: none; }
+  .fees-detail.show { display: block; }
+  .fees-detail .fee-row { display: flex; justify-content: space-between; padding: 3px 0; color: var(--text-muted); }
+  .fees-detail .fee-row .val { color: var(--text); font-variant-numeric: tabular-nums; }
+  .fees-detail .fee-row.total { margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--border); color: var(--text); font-weight: 600; }
+  .fees-detail .fee-row.total .val { color: var(--danger); }
+  .fees-detail .note { margin-top: 6px; color: var(--text-muted); font-size: 11px; line-height: 1.5; }
+
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .panel { max-height: 40vh; }
+    .results-overlay { width: calc(100% - 32px); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><span class="dot"></span>全国交通票务查询平台</div>
+    <span class="badge">Demo · 模拟数据</span>
+    <span class="meta" id="cityCount"></span>
+  </header>
+
+  <div class="layout">
+    <!-- Left: Search panel -->
+    <aside class="panel">
+      <h2>路线规划</h2>
+
+      <div class="mode-toggle">
+        <button id="modeSmart" class="active">智能推荐</button>
+        <button id="modeManual">指定交通</button>
+      </div>
+
+      <div id="smartTypeWrap" class="type-tabs" style="display:none;">
+        <button data-type="rail" class="active">高铁/火车</button>
+        <button data-type="bus">大巴</button>
+        <button data-type="flight">机票</button>
+      </div>
+
+      <div class="field swap-row">
+        <div>
+          <label>出发地</label>
+          <input type="text" id="fromCity" class="free-input" list="cityList" placeholder="输入城市名" autocomplete="off"/>
+        </div>
+        <button class="swap-btn" id="swapBtn" title="互换">⇄</button>
+        <div>
+          <label>到达地</label>
+          <input type="text" id="toCity" class="free-input" list="cityList" placeholder="输入城市名" autocomplete="off"/>
+        </div>
+      </div>
+      <datalist id="cityList"></datalist>
+      <div class="hint">支持中文城市名，如"北京"、"上海"、"成都"；未在库内城市将基于经纬度模糊匹配最近枢纽</div>
+
+      <div class="field">
+        <label>出发日期</label>
+        <input type="date" id="date"/>
+      </div>
+
+      <div class="field" id="priorityField">
+        <label>出行偏好</label>
+        <select id="priority">
+          <option value="balanced">综合平衡（推荐）</option>
+          <option value="fast">最快到达</option>
+          <option value="cheap">最便宜</option>
+          <option value="comfort">最舒适</option>
+        </select>
+      </div>
+
+      <button class="submit-btn" id="searchBtn">生成最佳路线</button>
+
+      <div class="legend">
+        <div style="font-weight:600; color:var(--text); margin-bottom:6px;">图例</div>
+        <div class="row"><span class="dot" style="background:var(--brand-strong)"></span>枢纽城市（多线路汇集）</div>
+        <div class="row"><span class="dot" style="background:var(--brand)"></span>普通城市</div>
+        <div class="row"><span class="dot" style="background:#1D4ED8"></span>高铁线路</div>
+        <div class="row"><span class="dot" style="background:#16a34a"></span>大巴线路</div>
+      </div>
+
+      <div class="legend" style="margin-top:8px;">
+        <b>数据说明</b><br>
+        本平台为功能演示，地图使用 OpenStreetMap，城市坐标真实。票务数据为模拟生成，结构对齐 12306 / 客运接口返回字段，可在 <code>mockTickets()</code> 处替换为真实 API。
+      </div>
+    </aside>
+
+    <!-- Right: Map + Results overlay -->
+    <div class="map-wrap" id="mapWrap">
+      <button class="map-toggle" id="mapToggle" title="折叠/展开地图"><span class="icon">▼</span> 折叠地图</button>
+      <div id="map"></div>
+      <div class="results-overlay">
+        <div class="head">
+          <span id="resultsTitle">查询结果</span>
+          <span class="sub" id="resultsSub">请选择起止城市</span>
+        </div>
+        <div class="body" id="resultsBody">
+          <div class="empty">点击地图城市标记<br>或在左侧选择起止城市后查询</div>
+        </div>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ============== 城市数据（经纬度真实） ==============
+const CITIES = [
+  { code: "BJ", name: "北京", lat: 39.9042, lng: 116.4074, hub: true },
+  { code: "SH", name: "上海", lat: 31.2304, lng: 121.4737, hub: true },
+  { code: "GZ", name: "广州", lat: 23.1291, lng: 113.2644, hub: true },
+  { code: "SZ", name: "深圳", lat: 22.5431, lng: 114.0579, hub: true },
+  { code: "CD", name: "成都", lat: 30.5728, lng: 104.0668, hub: true },
+  { code: "CQ", name: "重庆", lat: 29.5630, lng: 106.5516, hub: true },
+  { code: "WH", name: "武汉", lat: 30.5928, lng: 114.3055, hub: true },
+  { code: "NJ", name: "南京", lat: 32.0603, lng: 118.7969, hub: true },
+  { code: "HZ", name: "杭州", lat: 30.2741, lng: 120.1551, hub: true },
+  { code: "XA", name: "西安", lat: 34.3416, lng: 108.9398, hub: true },
+  { code: "TJ", name: "天津", lat: 39.3434, lng: 117.3616 },
+  { code: "JN", name: "济南", lat: 36.6512, lng: 117.1201 },
+  { code: "ZZ", name: "郑州", lat: 34.7466, lng: 113.6253 },
+  { code: "CS", name: "长沙", lat: 28.2278, lng: 112.9388 },
+  { code: "NC", name: "南昌", lat: 28.6820, lng: 115.8579 },
+  { code: "HE", name: "合肥", lat: 31.8206, lng: 117.2272 },
+  { code: "FZ", name: "福州", lat: 26.0745, lng: 119.2965 },
+  { code: "KM", name: "昆明", lat: 24.8801, lng: 102.8329 },
+  { code: "GY", name: "贵阳", lat: 26.6470, lng: 106.6302 },
+  { code: "LS", name: "兰州", lat: 36.0611, lng: 103.8343 },
+  { code: "XN", name: "西宁", lat: 36.6234, lng: 101.7782 },
+  { code: "YC", name: "银川", lat: 38.4872, lng: 106.2309 },
+  { code: "UR", name: "乌鲁木齐", lat: 43.8256, lng: 87.6168 },
+  { code: "LHASA", name: "拉萨", lat: 29.6500, lng: 91.1000 },
+  { code: "HB", name: "哈尔滨", lat: 45.8038, lng: 126.5350, hub: true },
+  { code: "CC", name: "长春", lat: 43.8171, lng: 125.3235 },
+  { code: "SY", name: "沈阳", lat: 41.8057, lng: 123.4315 },
+  { code: "DL", name: "大连", lat: 38.9140, lng: 121.6147 },
+  { code: "QD", name: "青岛", lat: 36.0671, lng: 120.3826 },
+  { code: "XM", name: "厦门", lat: 24.4798, lng: 118.0894 },
+  { code: "NN", name: "南宁", lat: 22.8170, lng: 108.3665 },
+  { code: "HK", name: "海口", lat: 20.0440, lng: 110.1990 },
+  { code: "TY", name: "太原", lat: 37.8706, lng: 112.5489 },
+  { code: "SJZ", name: "石家庄", lat: 38.0428, lng: 114.5149 },
+  { code: "HH", name: "呼和浩特", lat: 40.8426, lng: 111.7519 },
+];
+
+const cityMap = Object.fromEntries(CITIES.map(c => [c.code, c]));
+
+// ============== 地图初始化 ==============
+const map = L.map('map', { zoomControl: true, minZoom: 3, maxZoom: 10 }).setView([35.5, 110], 4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  maxZoom: 10
+}).addTo(map);
+
+// 城市标记
+const cityMarkers = {};
+CITIES.forEach(c => {
+  const icon = L.divIcon({
+    className: 'city-marker',
+    html: `<div class="city-pin ${c.hub ? 'hub' : ''}"></div>`,
+    iconSize: [c.hub ? 18 : 14, c.hub ? 18 : 14],
+    iconAnchor: [c.hub ? 9 : 7, c.hub ? 9 : 7]
+  });
+  const m = L.marker([c.lat, c.lng], { icon }).addTo(map);
+  m.bindPopup(`
+    <strong>${c.name}</strong>
+    <div class="pop-row">坐标：${c.lat.toFixed(2)}, ${c.lng.toFixed(2)}</div>
+    <div class="pop-row">${c.hub ? '枢纽城市' : '普通城市'} · 代码 ${c.code}</div>
+    <div class="pop-row" style="margin-top:4px;color:var(--brand-strong)">点击设为出发地</div>
+  `);
+  m.on('popupopen', () => {
+    document.getElementById('fromCity').value = c.name;
+    showToast(`已设出发地：${c.name}`);
+  });
+  cityMarkers[c.code] = m;
+});
+
+document.getElementById('cityCount').textContent = `覆盖 ${CITIES.length} 个城市`;
+
+// ============== 城市下拉填充 ==============
+const fromInput = document.getElementById('fromCity');
+const toInput = document.getElementById('toCity');
+const cityList = document.getElementById('cityList');
+CITIES.forEach(c => {
+  const opt = document.createElement('option');
+  opt.value = c.name;
+  cityList.appendChild(opt);
+});
+fromInput.value = "北京";
+toInput.value = "上海";
+
+// 默认日期 = 明天
+const tomorrow = new Date(Date.now() + 86400000);
+document.getElementById('date').value = tomorrow.toISOString().split('T')[0];
+
+// 互换按钮
+document.getElementById('swapBtn').addEventListener('click', () => {
+  const a = fromInput.value, b = toInput.value;
+  fromInput.value = b; toInput.value = a;
+});
+
+// 模式切换
+let mode = 'smart';
+let currentType = 'rail';
+document.getElementById('modeSmart').addEventListener('click', () => {
+  mode = 'smart';
+  document.getElementById('modeSmart').classList.add('active');
+  document.getElementById('modeManual').classList.remove('active');
+  document.getElementById('smartTypeWrap').style.display = 'none';
+  document.getElementById('priorityField').style.display = '';
+  document.querySelector('.panel h2').textContent = '路线规划';
+  document.getElementById('searchBtn').textContent = '生成最佳路线';
+});
+document.getElementById('modeManual').addEventListener('click', () => {
+  mode = 'manual';
+  document.getElementById('modeManual').classList.add('active');
+  document.getElementById('modeSmart').classList.remove('active');
+  document.getElementById('smartTypeWrap').style.display = 'flex';
+  document.getElementById('priorityField').style.display = 'none';
+  document.querySelector('.panel h2').textContent = '查询车票';
+  document.getElementById('searchBtn').textContent = '查询余票与价格';
+});
+document.querySelectorAll('#smartTypeWrap button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#smartTypeWrap button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentType = btn.dataset.type;
+  });
+});
+
+// ============== 地名解析（预置库 + Nominatim 兜底） ==============
+function findInPreset(name) {
+  if (!name) return null;
+  const n = name.trim();
+  // 精确匹配
+  let hit = CITIES.find(c => c.name === n);
+  if (hit) return { ...hit, source: 'preset', resolved: true };
+  // 包含匹配
+  hit = CITIES.find(c => c.name.includes(n) || n.includes(c.name));
+  if (hit) return { ...hit, source: 'preset', resolved: true };
+  return null;
+}
+
+async function resolvePlace(name) {
+  const preset = findInPreset(name);
+  if (preset) return preset;
+  // 调 Nominatim 兜底（OpenStreetMap 免费地理编码）
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=zh&q=${encodeURIComponent(name + ', 中国')}`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'zh' } });
+    const data = await res.json();
+    if (data && data[0]) {
+      return {
+        code: 'X',
+        name: name.trim(),
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+        hub: false,
+        source: 'nominatim',
+        resolved: true
+      };
+    }
+  } catch (e) {
+    // 网络错误，降级
+  }
+  return { name: name.trim(), resolved: false };
+}
+
+// 找最近的枢纽城市（用于模糊匹配的中转建议）
+function nearestHub(city) {
+  let best = null, minD = Infinity;
+  CITIES.filter(c => c.hub).forEach(h => {
+    const d = Math.hypot(city.lat - h.lat, city.lng - h.lng);
+    if (d < minD) { minD = d; best = h; }
+  });
+  return { hub: best, distance: minD * 111 };
+}
+
+// ============== 模拟票务生成（结构对齐真实接口） ==============
+function mockTickets(from, to, type) {
+  if (from.code === to.code) return [];
+  const seed = (from.lat + to.lat + from.lng + to.lng + type.length) * 1000;
+  const dist = Math.hypot(from.lat - to.lat, from.lng - to.lng) * 111;
+  const baseDuration = Math.max(2, dist / 2.5); // 小时
+
+  const trainPrefix = "G" + Math.floor(1000 + (seed % 8000));
+  const types = {
+    rail: [
+      { code: "G", name: "高铁", durMul: 1.0, pricePerKm: 0.46, seats: [["二等座", 0.46], ["一等座", 0.78], ["商务座", 1.55]] },
+      { code: "D", name: "动车", durMul: 1.25, pricePerKm: 0.30, seats: [["二等座", 0.30], ["一等座", 0.55]] },
+      { code: "K", name: "普快", durMul: 2.5, pricePerKm: 0.12, seats: [["硬座", 0.12], ["硬卧", 0.22], ["软卧", 0.40]] },
+    ],
+    bus: [
+      { code: "B", name: "豪华大巴", durMul: 1.5, pricePerKm: 0.18, seats: [["普通座", 0.18], ["商务座", 0.30]] },
+      { code: "S", name: "省际直达", durMul: 1.4, pricePerKm: 0.22, seats: [["普通座", 0.22]] },
+    ],
+    flight: [
+      { code: "CA", name: "国航", durMul: 0.25, pricePerKm: 0.65, seats: [["经济舱", 0.65], ["公务舱", 1.80]] },
+      { code: "MU", name: "东航", durMul: 0.25, pricePerKm: 0.60, seats: [["经济舱", 0.60], ["公务舱", 1.70]] },
+      { code: "CZ", name: "南航", durMul: 0.25, pricePerKm: 0.62, seats: [["经济舱", 0.62], ["公务舱", 1.75]] },
+    ],
+  };
+
+  const list = [];
+  types[type].forEach((cat, idx) => {
+    const depH = 6 + (idx * 3) + (Math.floor(seed) % 3);
+    const depM = (Math.floor(seed / 7) % 12) * 5;
+    const dur = baseDuration * cat.durMul;
+    const arrH = (depH + Math.floor(dur)) % 24;
+    const arrM = (depM + Math.floor((dur % 1) * 60)) % 60;
+    const pad = n => String(n).padStart(2, '0');
+
+    // 状态
+    const rnd = (Math.sin(seed + idx * 11) + 1) / 2;
+    let status, statusTag;
+    if (rnd > 0.7) { status = "有票"; statusTag = "tag-ok"; }
+    else if (rnd > 0.4) { status = "余票紧张"; statusTag = "tag-few"; }
+    else { status = "售罄"; statusTag = "tag-no"; }
+
+    // 主票价（取第一个席别）
+    const [seatName, rate] = cat.seats[0];
+    const price = Math.round(dist * rate * 10) / 10;
+
+    list.push({
+      no: `${cat.code}${Math.floor(seed + idx * 137) % 9000 + 1000}`,
+      type: cat.name,
+      typeTag: type === 'rail' ? 'tag-rail' : type === 'bus' ? 'tag-bus' : 'tag-flight',
+      depTime: `${pad(depH)}:${pad(depM)}`,
+      arrTime: `${pad(arrH)}:${pad(arrM)}`,
+      duration: `${Math.floor(dur)}h${pad(Math.floor((dur % 1) * 60))}m`,
+      from: from.name, to: to.name,
+      seat: seatName,
+      price: price,
+      dist: Math.round(dist),
+      status, statusTag,
+      // 费用构成
+      fees: buildFeeBreakdown(type, price, seatName)
+    });
+  });
+  return list;
+}
+
+// 费用构成生成器：按交通类型拆分票价
+function buildFeeBreakdown(type, total, seatName) {
+  const t = Math.round(total * 100) / 100;
+  if (type === 'rail') {
+    // 铁路：票面价 = 基础票价×里程 + 加快票 + 卧铺/座位费 + 强制险 + 服务费
+    const base = +(t * 0.78).toFixed(2);          // 基础客票票价
+    const express = +(t * 0.10).toFixed(2);      // 加快票（高铁/动车特有）
+    const seatFee = +(t * 0.07).toFixed(2);       // 空调/座位席别费
+    const insurance = +(t * 0.02).toFixed(2);     // 强制意外伤害险（含在票价内）
+    const service = +(t - base - express - seatFee - insurance).toFixed(2); // 客票代售服务费
+    return {
+      rows: [
+        { name: '基础客票票价', val: base, desc: '按里程计费的硬座基准价' },
+        { name: '加快附加费', val: express, desc: '高铁/动车提速附加' },
+        { name: `${seatName}席别费`, val: seatFee, desc: '空调/座位等级差价' },
+        { name: '旅客意外伤害强制险', val: insurance, desc: '含在票价内，2% 强制' },
+        { name: '客票服务费', val: service, desc: '售票系统/12306 平台费' }
+      ],
+      total: t,
+      note: '国内铁路票价含强制险，无额外燃油附加费。退票按时间收取 5%-20% 手续费。'
+    };
+  }
+  if (type === 'bus') {
+    // 大巴：运输票价 + 站务费 + 保险（自愿）+ 燃油附加
+    const transport = +(t * 0.82).toFixed(2);
+    const fuel = +(t * 0.08).toFixed(2);
+    const station = +(t * 0.06).toFixed(2);
+    const insurance = +(t * 0.02).toFixed(2);
+    const service = +(t - transport - fuel - station - insurance).toFixed(2);
+    return {
+      rows: [
+        { name: '旅客运输票价', val: transport, desc: '基础运输费' },
+        { name: '燃油附加费', val: fuel, desc: '随油价浮动' },
+        { name: '站务费', val: station, desc: '汽车站服务' },
+        { name: '承运人责任险', val: insurance, desc: '含在票价内' },
+        { name: '代售服务费', val: service, desc: '售票点服务' }
+      ],
+      total: t,
+      note: '大巴票价不含乘客自愿险（约 2-5 元），可在车站单独购买。'
+    };
+  }
+  // 机票：票面 + 民航发展基金 + 燃油附加 + 保险 + 服务
+  const fare = +(t * 0.72).toFixed(2);
+  const caac = type === 'flight' ? 50 : 0; // 民航发展基金
+  const fuel = +(t * 0.10).toFixed(2);
+  const insurance = +(t * 0.05).toFixed(2);
+  const service = +(t - fare - caac - fuel - insurance).toFixed(2);
+  return {
+    rows: [
+      { name: '机票票面价', val: fare, desc: '航司公布运价' },
+      { name: '民航发展基金', val: 50, desc: '固定 50 元/航段' },
+      { name: '燃油附加费', val: fuel, desc: '随航油价格调整' },
+      { name: '航空意外险', val: insurance, desc: '建议购买' },
+      { name: '代理服务费', val: service, desc: 'OTA 平台费' }
+    ],
+    total: t,
+    note: '机票价格不含行李托运费、退改签费。特价票退改签费用较高。'
+  };
+}
+
+// ============== 推荐算法：多维度评分 ==============
+// 输入: from, to (已解析城市), priority (balanced/fast/cheap/comfort)
+// 输出: 三种交通方式的详细方案 + 综合评分
+function generateRoutes(from, to, priority) {
+  const dist = Math.hypot(from.lat - to.lat, from.lng - to.lng) * 111;
+  const distKm = Math.max(1, Math.round(dist));
+
+  const routes = [];
+
+  // 1. 高铁方案
+  let railDur, railPrice, railName;
+  if (distKm <= 200) {
+    railDur = distKm / 200; // 城际高铁约200km/h
+    railPrice = distKm * 0.46;
+    railName = "城际高铁";
+  } else if (distKm <= 1000) {
+    railDur = distKm / 250;
+    railPrice = distKm * 0.45;
+    railName = "高速动车";
+  } else if (distKm <= 2000) {
+    railDur = distKm / 220;
+    railPrice = distKm * 0.43;
+    railName = "长距离高铁";
+  } else {
+    // 超过 2000km，高铁不推荐
+    railDur = distKm / 200;
+    railPrice = distKm * 0.42;
+    railName = "长途火车";
+  }
+  // 是否直达
+  const bothHub = from.hub && to.hub;
+  const eitherHub = from.hub || to.hub;
+  let railTransfer = 0;
+  if (!bothHub) railTransfer = eitherHub ? 0 : 1;
+
+  routes.push({
+    type: 'rail', label: railName, color: '#1D4ED8', tagClass: 'tag-rail',
+    distKm, durH: railDur, transfer: railTransfer,
+    price: railPrice, comfort: 4.2, freq: '每日 5-15 班',
+    coverage: distKm <= 2000 ? '推荐' : '过长'
+  });
+
+  // 2. 大巴方案
+  let busDur, busPrice, busName;
+  busDur = distKm / 70; // 大巴约 70km/h
+  busPrice = distKm * 0.20;
+  busName = "省际大巴";
+  let busTransfer = bothHub ? 0 : (eitherHub ? 1 : 2);
+  routes.push({
+    type: 'bus', label: busName, color: '#16a34a', tagClass: 'tag-bus',
+    distKm, durH: busDur, transfer: busTransfer,
+    price: busPrice, comfort: 2.8, freq: '每日 2-6 班',
+    coverage: distKm <= 800 ? '推荐' : (distKm <= 1500 ? '可行' : '不推荐')
+  });
+
+  // 3. 机票方案
+  let flightDur, flightPrice, flightName;
+  flightDur = distKm <= 800 ? 1.5 : distKm / 700 + 0.8; // 含机场通勤/登机
+  flightPrice = Math.max(280, distKm * 0.65);
+  flightName = "经济舱直飞";
+  let flightTransfer = 0;
+  if (!bothHub) flightTransfer = eitherHub ? 0 : 1;
+  routes.push({
+    type: 'flight', label: flightName, color: '#b45309', tagClass: 'tag-flight',
+    distKm, durH: flightDur, transfer: flightTransfer,
+    price: flightPrice, comfort: 4.5, freq: '每日 1-5 班',
+    coverage: distKm >= 800 ? '推荐' : '不划算'
+  });
+
+  // 评分（归一化到 0-100）
+  const maxDur = Math.max(...routes.map(r => r.durH));
+  const maxPrice = Math.max(...routes.map(r => r.price));
+  const weights = {
+    balanced: { dur: 0.3, price: 0.35, comfort: 0.2, transfer: 0.15 },
+    fast:     { dur: 0.55, price: 0.15, comfort: 0.15, transfer: 0.15 },
+    cheap:    { dur: 0.15, price: 0.55, comfort: 0.15, transfer: 0.15 },
+    comfort:  { dur: 0.2, price: 0.15, comfort: 0.5, transfer: 0.15 }
+  };
+  const w = weights[priority] || weights.balanced;
+
+  routes.forEach(r => {
+    const durScore = (1 - r.durH / maxDur) * 100;
+    const priceScore = (1 - r.price / maxPrice) * 100;
+    const transferScore = (1 - r.transfer / 2) * 100;
+    const comfortScore = (r.comfort / 5) * 100;
+    r.score = Math.round(
+      durScore * w.dur + priceScore * w.price + comfortScore * w.comfort + transferScore * w.transfer
+    );
+    // 过长 / 不推荐扣分
+    if (r.coverage === '过长' || r.coverage === '不推荐' || r.coverage === '不划算') r.score = Math.max(0, r.score - 25);
+  });
+
+  // 排序：评分降序
+  routes.sort((a, b) => b.score - a.score);
+  return { routes, distKm };
+}
+
+// 推荐理由生成
+function explainRecommendation(best, distKm, priority) {
+  const reasons = [];
+  if (priority === 'fast' && best.durH === Math.min(...[best.durH])) reasons.push('耗时最短');
+  if (priority === 'cheap' && best.price < 300) reasons.push('票价最低');
+  if (priority === 'comfort' && best.comfort >= 4.5) reasons.push('舒适度最高');
+  if (best.transfer === 0) reasons.push('可直达，无需中转');
+  if (best.type === 'rail' && distKm <= 1500) reasons.push('中短途高铁性价比突出');
+  if (best.type === 'flight' && distKm > 1000) reasons.push('长途飞行省时');
+  if (best.type === 'bus' && distKm <= 500) reasons.push('短途大巴经济便捷');
+  if (reasons.length === 0) reasons.push(`综合评分最高 (${best.score}/100)`);
+  return reasons.join('，') + '。';
+}
+
+// ============== 查询与渲染 ==============
+let routeLine = null;
+
+document.getElementById('searchBtn').addEventListener('click', async () => {
+  const fromRaw = fromInput.value.trim();
+  const toRaw = toInput.value.trim();
+  if (!fromRaw || !toRaw) { showToast("请填写出发地与到达地"); return; }
+  if (fromRaw === toRaw) { showToast("出发地与目的地相同"); return; }
+
+  document.getElementById('searchBtn').textContent = '解析中...';
+  document.getElementById('searchBtn').disabled = true;
+
+  const [from, to] = await Promise.all([resolvePlace(fromRaw), resolvePlace(toRaw)]);
+
+  document.getElementById('searchBtn').disabled = false;
+  if (mode === 'smart') document.getElementById('searchBtn').textContent = '生成最佳路线';
+  else document.getElementById('searchBtn').textContent = '查询余票与价格';
+
+  if (!from.resolved || !to.resolved) {
+    const msg = !from.resolved && !to.resolved ? '两地均无法识别'
+      : (!from.resolved ? `出发地无法识别：${fromRaw}` : `到达地无法识别：${toRaw}`);
+    showToast(msg + '（试试用城市全称如"北京市"）');
+    document.getElementById('resultsBody').innerHTML = `<div class="empty">${msg}<br><br>提示：库内置 ${CITIES.length} 个城市；其他地名走 OpenStreetMap 在线解析，请检查网络或换用城市名</div>`;
+    return;
+  }
+
+  const date = document.getElementById('date').value || tomorrow.toISOString().split('T')[0];
+
+  // 绘制线路
+  if (routeLine) map.removeLayer(routeLine);
+  let color;
+  if (mode === 'smart') {
+    color = '#0FDC78';
+  } else {
+    color = currentType === 'rail' ? '#1D4ED8' : currentType === 'bus' ? '#16a34a' : '#b45309';
+  }
+  const isDashed = mode === 'manual' && currentType === 'bus';
+  routeLine = L.polyline([[from.lat, from.lng], [to.lat, to.lng]], {
+    color, weight: 3, opacity: 0.8, dashArray: isDashed ? '6 6' : null
+  }).addTo(map);
+
+  // 调整视图
+  map.fitBounds([[from.lat, from.lng], [to.lat, to.lng]], { padding: [80, 80], maxZoom: 7 });
+
+  if (mode === 'smart') {
+    const priority = document.getElementById('priority').value;
+    const { routes, distKm } = generateRoutes(from, to, priority);
+    const best = routes[0];
+    const reason = explainRecommendation(best, distKm, priority);
+    renderSmartResults(routes, from, to, date, distKm, reason);
+    showToast(`推荐：${best.label} · ${Math.floor(best.durH)}h${String(Math.floor((best.durH % 1) * 60)).padStart(2,'0')}m · ¥${Math.round(best.price)}`);
+  } else {
+    const tickets = mockTickets(from, to, currentType);
+    renderManualResults(tickets, from, to, date);
+    showToast(`${from.name} → ${to.name}（${currentType === 'rail' ? '高铁' : currentType === 'bus' ? '大巴' : '机票'}）`);
+  }
+});
+
+function fmtDur(h) {
+  const m = Math.floor((h % 1) * 60);
+  return `${Math.floor(h)}h${String(m).padStart(2, '0')}m`;
+}
+
+function fmtPrice(p) {
+  return '¥' + Math.round(p);
+}
+
+function renderSmartResults(routes, from, to, date, distKm, reason) {
+  const body = document.getElementById('resultsBody');
+  const sub = document.getElementById('resultsSub');
+  document.getElementById('resultsTitle').textContent = `${from.name} → ${to.name}`;
+  sub.textContent = `${date} · 直线约 ${distKm} km`;
+
+  const best = routes[0];
+  const typeLabel = { rail: '高铁', bus: '大巴', flight: '飞机' }[best.type];
+
+  let html = `
+    <div class="reco-card">
+      <div class="label">★ 智能推荐</div>
+      <div class="title">${best.label} · ${fmtDur(best.durH)} · ${fmtPrice(best.price)}</div>
+      <div class="reason">${reason}</div>
+    </div>
+    <table class="compare-tbl">
+      <thead>
+        <tr><th>方案</th><th>耗时</th><th>价格</th><th>中转</th><th>舒适</th><th>评分</th></tr>
+      </thead>
+      <tbody>
+  `;
+  routes.forEach((r, i) => {
+    const tLbl = { rail: '高铁', bus: '大巴', flight: '飞机' }[r.type];
+    const trClass = i === 0 ? 'best' : '';
+    html += `
+      <tr class="${trClass}">
+        <td><span class="tag ${r.tagClass}">${tLbl}</span> ${r.label}</td>
+        <td>${fmtDur(r.durH)}</td>
+        <td>${fmtPrice(r.price)}</td>
+        <td>${r.transfer === 0 ? '直达' : r.transfer + '次'}</td>
+        <td>${r.comfort.toFixed(1)}</td>
+        <td class="score">${r.score}</td>
+      </tr>
+    `;
+  });
+  html += `</tbody></table>`;
+
+  // 推荐方案的车次详情（基于最佳方案生成车次列表）
+  const detailType = best.type;
+  const tickets = mockTickets(from, to, detailType);
+  if (tickets.length > 0) {
+    html += `<div style="margin-top:12px; padding:8px 0 4px; font-size:12px; color:var(--text-muted); font-weight:500;">推荐方案的具体车次 · 点击「明细」查看票价构成</div>`;
+    html += tickets.map(t => renderTicketCard(t)).join('');
+  }
+
+  body.innerHTML = html;
+  bindFeeToggles(body);
+}
+
+function renderManualResults(tickets, from, to, date) {
+  const body = document.getElementById('resultsBody');
+  const sub = document.getElementById('resultsSub');
+  document.getElementById('resultsTitle').textContent = `${from.name} → ${to.name}`;
+  sub.textContent = `${date} · 共 ${tickets.length} 趟 · 点击「明细」查看票价构成`;
+
+  if (tickets.length === 0) {
+    body.innerHTML = `<div class="empty">未查到车次<br>请更换起止城市</div>`;
+    return;
+  }
+
+  body.innerHTML = tickets.map(t => renderTicketCard(t)).join('');
+  bindFeeToggles(body);
+}
+
+// 渲染单张车票卡片（含费用明细展开区）
+function renderTicketCard(t) {
+  return `
+    <div class="ticket">
+      <div class="row1">
+        <div class="times">
+          ${t.depTime} <span class="arrow">→</span> ${t.arrTime}
+        </div>
+        <div class="price">¥${t.price}</div>
+      </div>
+      <div class="row2">
+        <span><span class="tag ${t.typeTag}">${t.type}</span> ${t.no} · ${t.duration} · ${t.seat}</span>
+        <span class="tag ${t.statusTag}">${t.status}</span>
+      </div>
+      <div class="row2" style="margin-top:4px;">
+        <span>${t.from} → ${t.to} · 约 ${t.dist} 公里</span>
+        <button class="fee-toggle" data-fees="${t.no}">车费明细 ▾</button>
+      </div>
+      <div class="fees-detail" data-fees-detail="${t.no}">
+        ${renderFeesDetail(t.fees)}
+      </div>
+    </div>
+  `;
+}
+
+// 渲染费用明细内容
+function renderFeesDetail(fees) {
+  if (!fees) return '<div class="note">无明细数据</div>';
+  const rows = fees.rows.map(r => `
+    <div class="fee-row">
+      <span>${r.name} <span style="color:var(--text-muted); font-size:11px;">· ${r.desc}</span></span>
+      <span class="val">¥${r.val}</span>
+    </div>
+  `).join('');
+  return `
+    ${rows}
+    <div class="fee-row total">
+      <span>合计票价</span>
+      <span class="val">¥${fees.total}</span>
+    </div>
+    <div class="note">${fees.note}</div>
+  `;
+}
+
+// 绑定费用明细展开/收起
+function bindFeeToggles(scope) {
+  scope.querySelectorAll('.fee-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.fees;
+      const detail = scope.querySelector(`[data-fees-detail="${id}"]`);
+      if (!detail) return;
+      const showing = detail.classList.toggle('show');
+      btn.textContent = showing ? '收起 ▴' : '车费明细 ▾';
+    });
+  });
+}
+
+// ============== Toast ==============
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ============== 地图折叠 ==============
+document.getElementById('mapToggle').addEventListener('click', () => {
+  const wrap = document.getElementById('mapWrap');
+  const collapsed = wrap.classList.toggle('collapsed');
+  const btn = document.getElementById('mapToggle');
+  btn.innerHTML = collapsed
+    ? '<span class="icon">▶</span> 展开地图'
+    : '<span class="icon">▼</span> 折叠地图';
+  // 折叠后让地图重新计算尺寸（展开时调用）
+  if (!collapsed) {
+    setTimeout(() => map.invalidateSize(), 50);
+  }
+  showToast(collapsed ? '地图已折叠' : '地图已展开');
+});
+
+// ============== PWA：Service Worker 注册 ==============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => {
+        console.log('[PWA] SW 注册成功，scope:', reg.scope);
+        // 监听更新
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              showToast('新版本已就绪，刷新即可使用');
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('[PWA] SW 注册失败:', err));
+  });
+}
+
+// ============== PWA：安装提示（beforeinstallprompt） ==============
+let deferredPrompt = null;
+const installBtn = document.createElement('button');
+installBtn.textContent = '⬇ 安装为 APP';
+installBtn.style.cssText = `
+  position: fixed; bottom: 16px; right: 16px; z-index: 9999;
+  background: #0FDC78; color: #004D26; border: none; padding: 10px 18px;
+  border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(15, 220, 120, 0.4); display: none;
+`;
+document.body.appendChild(installBtn);
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block';
+  showToast('可以安装为 APP 啦');
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    showToast('正在安装到主屏幕...');
+  }
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+  installBtn.style.display = 'none';
+  showToast('已安装为 APP');
+});
+
+// ============== iOS 安装提示（无 beforeinstallprompt） ==============
+function isIos() {
+  const ua = navigator.userAgent;
+  return /iphone|ipad|ipod/i.test(ua);
+}
+function isInStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         navigator.standalone === true;
+}
+if (isIos() && !isInStandaloneMode()) {
+  setTimeout(() => {
+    showToast('iOS：点 Safari 底部「分享」→「添加到主屏幕」即可安装', 4000);
+  }, 2500);
+}
+
+// ============== URL 参数：从 manifest shortcut 进入 ==============
+const params = new URLSearchParams(location.search);
+const initMode = params.get('mode');
+if (initMode === 'manual') {
+  document.getElementById('modeManual').click();
+} else if (initMode === 'smart') {
+  document.getElementById('modeSmart').click();
+}
+</script>
+</body>
+</html>

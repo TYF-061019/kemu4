@@ -1,0 +1,42 @@
+{
+  "name": "全国交通票务查询平台",
+  "short_name": "交通票务",
+  "description": "实时查询全国高铁、大巴、机票路线，智能推荐最佳方案，附车费构成明细",
+  "start_url": "./transport-platform.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f7fa",
+  "theme_color": "#0FDC78",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["travel", "navigation", "utilities"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "智能推荐",
+      "short_name": "推荐",
+      "description": "输入两地直接生成最佳路线",
+      "url": "./transport-platform.html?mode=smart"
+    },
+    {
+      "name": "查询车票",
+      "short_name": "查询",
+      "description": "按交通类型查询具体车次",
+      "url": "./transport-platform.html?mode=manual"
+    }
+  ]
+}
