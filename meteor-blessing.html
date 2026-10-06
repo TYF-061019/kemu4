@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>流星雨 · 写下你的祝福</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    background: #0a0a1f;
+    color: #fff;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  /* 星空背景 */
+  #sky {
+    position: fixed; inset: 0;
+    background: linear-gradient(to bottom, #0b0b2a 0%, #1a1140 45%, #2d1b5e 75%, #3a1d6e 100%);
+    z-index: 0;
+  }
+  /* 远景星云 */
+  .nebula {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .nebula.n1 { width: 300px; height: 300px; background: #6a3cff; top: 10%; left: -100px; }
+  .nebula.n2 { width: 260px; height: 260px; background: #ff4fa3; bottom: 15%; right: -80px; opacity: 0.35; }
+  .nebula.n3 { width: 200px; height: 200px; background: #3cc8ff; top: 40%; right: 20%; opacity: 0.25; }
+
+  /* 流星与星星 canvas */
+  #starCanvas, #meteorCanvas, #blessingCanvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+  #meteorCanvas { z-index: 2; }
+  #blessingCanvas { z-index: 3; }
+
+  /* 顶部标题 */
+  .header {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 24px);
+    left: 0; right: 0;
+    text-align: center;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: 8px;
+    text-shadow: 0 0 20px rgba(180, 200, 255, 0.6);
+    background: linear-gradient(180deg, #fff 0%, #b8c8ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    margin-top: 8px;
+    font-size: 13px;
+    color: rgba(200, 210, 255, 0.7);
+    letter-spacing: 3px;
+  }
+
+  /* 历史祝福展示区 */
+  .history-toggle {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 24px);
+    right: 16px;
+    z-index: 20;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .history-toggle:active { transform: scale(0.92); background: rgba(255,255,255,0.22); }
+
+  .history-panel {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 78%;
+    max-width: 320px;
+    background: rgba(15, 12, 40, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255,255,255,0.1);
+    z-index: 50;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    display: flex; flex-direction: column;
+  }
+  .history-panel.open { transform: translateX(0); }
+  .history-panel .panel-head {
+    padding: calc(env(safe-area-inset-top) + 20px) 20px 16px;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .panel-close {
+    font-size: 22px; color: rgba(255,255,255,0.6); cursor: pointer;
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  }
+  .history-list {
+    flex: 1; overflow-y: auto;
+    padding: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .history-list::-webkit-scrollbar { width: 3px; }
+  .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+  .blessing-item {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    word-break: break-word;
+    position: relative;
+  }
+  .blessing-item .time {
+    display: block;
+    font-size: 11px;
+    color: rgba(200,210,255,0.5);
+    margin-top: 6px;
+  }
+  .blessing-item .del {
+    position: absolute;
+    top: 6px; right: 8px;
+    font-size: 16px;
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    padding: 4px;
+  }
+  .empty-hint {
+    text-align: center;
+    color: rgba(200,210,255,0.5);
+    font-size: 13px;
+    margin-top: 40px;
+    line-height: 1.8;
+  }
+  .clear-all {
+    text-align: center;
+    padding: 14px;
+    font-size: 13px;
+    color: rgba(255,120,120,0.8);
+    cursor: pointer;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* 遮罩 */
+  .mask {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 40;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .mask.show { opacity: 1; pointer-events: auto; }
+
+  /* 底部输入区 */
+  .input-area {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: 0;
+    padding: 14px 16px calc(env(safe-area-inset-bottom) + 16px);
+    background: linear-gradient(to top, rgba(10,10,31,0.85) 30%, rgba(10,10,31,0));
+    z-index: 10;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  .input-wrap {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 22px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-wrap.focus {
+    border-color: rgba(150, 180, 255, 0.6);
+    box-shadow: 0 0 16px rgba(120, 150, 255, 0.25);
+  }
+  .input-wrap textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 15px;
+    resize: none;
+    max-height: 90px;
+    line-height: 1.4;
+    font-family: inherit;
+  }
+  .input-wrap textarea::placeholder { color: rgba(200,210,255,0.45); }
+  .input-wrap textarea::-webkit-scrollbar { width: 0; }
+
+  .send-btn {
+    flex-shrink: 0;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #6a8bff 0%, #a855f7 100%);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(120, 100, 255, 0.5);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .send-btn:active { transform: scale(0.9); }
+  .send-btn:disabled {
+    opacity: 0.4;
+    box-shadow: none;
+  }
+  .send-btn svg { width: 20px; height: 20px; }
+
+  /* 提示文字 */
+  .tip {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + 90px);
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(200,210,255,0.6);
+    letter-spacing: 1px;
+    z-index: 10;
+    pointer-events: none;
+    animation: breathe 3s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* 发送成功的toast */
+  .toast {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+  <div id="sky"></div>
+  <div class="nebula n1"></div>
+  <div class="nebula n2"></div>
+  <div class="nebula n3"></div>
+
+  <canvas id="starCanvas"></canvas>
+  <canvas id="meteorCanvas"></canvas>
+  <canvas id="blessingCanvas"></canvas>
+
+  <div class="header">
+    <h1>流星雨</h1>
+    <p>许下心愿 · 让祝福随流星划过夜空</p>
+  </div>
+
+  <div class="history-toggle" id="historyBtn" title="我的祝福">📜</div>
+
+  <div class="mask" id="mask"></div>
+  <div class="history-panel" id="historyPanel">
+    <div class="panel-head">
+      <span>我的祝福</span>
+      <span class="panel-close" id="panelClose">✕</span>
+    </div>
+    <div class="history-list" id="historyList"></div>
+    <div class="clear-all" id="clearAll">清空所有祝福</div>
+  </div>
+
+  <div class="tip" id="tip">点击下方，写下你的祝福，化作流星飞向夜空 ✨</div>
+
+  <div class="input-area">
+    <div class="input-wrap" id="inputWrap">
+      <textarea id="blessingInput" rows="1" placeholder="写下你的祝福…（最多50字）" maxlength="50"></textarea>
+    </div>
+    <button class="send-btn" id="sendBtn" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ====== Canvas 初始化 ======
+  const starCanvas = document.getElementById('starCanvas');
+  const meteorCanvas = document.getElementById('meteorCanvas');
+  const blessingCanvas = document.getElementById('blessingCanvas');
+  const sCtx = starCanvas.getContext('2d');
+  const mCtx = meteorCanvas.getContext('2d');
+  const bCtx = blessingCanvas.getContext('2d');
+
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    [starCanvas, meteorCanvas, blessingCanvas].forEach(c => {
+      c.width = W * DPR;
+      c.height = H * DPR;
+      c.style.width = W + 'px';
+      c.style.height = H + 'px';
+    });
+    sCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    mCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    bCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    initStars();
+  }
+
+  // ====== 星星层 ======
+  let stars = [];
+  function initStars() {
+    stars = [];
+    const count = Math.floor((W * H) / 5000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H * 0.85,
+        r: Math.random() * 1.4 + 0.3,
+        baseA: Math.random() * 0.5 + 0.3,
+        twinkle: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.02 + 0.005
+      });
+    }
+  }
+
+  function drawStars() {
+    sCtx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      s.twinkle += s.speed;
+      const a = s.baseA + Math.sin(s.twinkle) * 0.3;
+      sCtx.beginPath();
+      sCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      sCtx.fillStyle = `rgba(255,255,255,${Math.max(0.05, a)})`;
+      sCtx.fill();
+      // 较大的星星加光晕
+      if (s.r > 1) {
+        const g = sCtx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 4);
+        g.addColorStop(0, `rgba(200,220,255,${a * 0.3})`);
+        g.addColorStop(1, 'rgba(200,220,255,0)');
+        sCtx.fillStyle = g;
+        sCtx.fillRect(s.x - s.r * 4, s.y - s.r * 4, s.r * 8, s.r * 8);
+      }
+    }
+  }
+
+  // ====== 流星层 ======
+  let meteors = [];
+  function spawnMeteor() {
+    // 从右上向左下
+    const startX = Math.random() * W * 0.7 + W * 0.2;
+    const startY = Math.random() * H * 0.3;
+    const angle = Math.PI / 4 + (Math.random() * 0.3 - 0.15); // 45度左右
+    const speed = Math.random() * 4 + 6;
+    const len = Math.random() * 120 + 80;
+    const colors = [
+      ['255,255,255', '180,210,255'],
+      ['255,220,180', '255,150,100'],
+      ['200,220,255', '120,180,255'],
+      ['255,200,240', '220,120,200']
+    ];
+    const c = colors[Math.floor(Math.random() * colors.length)];
+    meteors.push({
+      x: startX, y: startY,
+      vx: -Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      len: len,
+      color: c,
+      life: 1,
+      decay: Math.random() * 0.012 + 0.006,
+      width: Math.random() * 1.5 + 1
+    });
+  }
+
+  function drawMeteors() {
+    mCtx.clearRect(0, 0, W, H);
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const m = meteors[i];
+      m.x += m.vx;
+      m.y += m.vy;
+      m.life -= m.decay;
+      if (m.life <= 0 || m.x < -200 || m.y > H + 200) {
+        meteors.splice(i, 1);
+        continue;
+      }
+      const tailX = m.x - m.vx * (m.len / Math.hypot(m.vx, m.vy));
+      const tailY = m.y - m.vy * (m.len / Math.hypot(m.vx, m.vy));
+      const grad = mCtx.createLinearGradient(m.x, m.y, tailX, tailY);
+      grad.addColorStop(0, `rgba(${m.color[0]},${m.life})`);
+      grad.addColorStop(0.3, `rgba(${m.color[1]},${m.life * 0.6})`);
+      grad.addColorStop(1, `rgba(${m.color[1]},0)`);
+      mCtx.strokeStyle = grad;
+      mCtx.lineWidth = m.width;
+      mCtx.lineCap = 'round';
+      mCtx.beginPath();
+      mCtx.moveTo(m.x, m.y);
+      mCtx.lineTo(tailX, tailY);
+      mCtx.stroke();
+      // 流星头部亮斑
+      const head = mCtx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.width * 3);
+      head.addColorStop(0, `rgba(255,255,255,${m.life})`);
+      head.addColorStop(1, 'rgba(255,255,255,0)');
+      mCtx.fillStyle = head;
+      mCtx.fillRect(m.x - m.width * 3, m.y - m.width * 3, m.width * 6, m.width * 6);
+    }
+  }
+
+  // 自动生成流星
+  let meteorTimer = 0;
+  function updateMeteorSpawner() {
+    meteorTimer--;
+    if (meteorTimer <= 0) {
+      spawnMeteor();
+      meteorTimer = Math.random() * 60 + 30; // 0.5~1.5秒
+    }
+  }
+
+  // ====== 祝福文字层（升空特效）======
+  let blessingTexts = [];
+  function launchBlessing(text) {
+    if (!text) return;
+    // 起始位置：屏幕底部中央偏上
+    const startX = W / 2 + (Math.random() - 0.5) * W * 0.3;
+    const startY = H - 120;
+    // 终点：屏幕上半部分随机
+    const endX = W / 2 + (Math.random() - 0.5) * W * 0.7;
+    const endY = H * 0.15 + Math.random() * H * 0.3;
+
+    const fontSize = Math.max(14, Math.min(22, 22 - text.length * 0.4));
+
+    blessingTexts.push({
+      text: text,
+      x: startX, y: startY,
+      tx: endX, ty: endY,
+      progress: 0,
+      speed: 0.006 + Math.random() * 0.004,
+      fontSize: fontSize,
+      hue: Math.random() * 60 + 200, // 蓝色到紫色
+      alpha: 0,
+      state: 'rising', // rising -> floating -> fading
+      floatTime: 0,
+      floatDuration: 180 + Math.random() * 120,
+      angle: (Math.random() - 0.5) * 0.2
+    });
+
+    // 发射时附带一颗流星（从文字位置飞出）
+    const angle = Math.atan2(endY - startY, endX - startX);
+    const speed = 8;
+    meteors.push({
+      x: startX, y: startY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      len: 100,
+      color: ['255,255,255', '200,180,255'],
+      life: 1,
+      decay: 0.015,
+      width: 2
+    });
+  }
+
+  function drawBlessings() {
+    bCtx.clearRect(0, 0, W, H);
+    for (let i = blessingTexts.length - 1; i >= 0; i--) {
+      const b = blessingTexts[i];
+      if (b.state === 'rising') {
+        b.progress += b.speed;
+        // ease out
+        const p = 1 - Math.pow(1 - b.progress, 3);
+        b.x = b.x + (b.tx - b.x) * 0.04;
+        b.y = b.y + (b.ty - b.y) * 0.04;
+        b.alpha = Math.min(1, b.alpha + 0.04);
+        if (b.progress >= 1 || Math.abs(b.y - b.ty) < 2) {
+          b.state = 'floating';
+        }
+      } else if (b.state === 'floating') {
+        b.floatTime++;
+        // 轻微漂浮
+        b.y += Math.sin(b.floatTime * 0.03) * 0.3;
+        if (b.floatTime > b.floatDuration) {
+          b.state = 'fading';
+        }
+      } else if (b.state === 'fading') {
+        b.alpha -= 0.008;
+        if (b.alpha <= 0) {
+          blessingTexts.splice(i, 1);
+          continue;
+        }
+      }
+
+      // 绘制发光文字
+      bCtx.save();
+      bCtx.font = `500 ${b.fontSize}px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      bCtx.textAlign = 'center';
+      bCtx.textBaseline = 'middle';
+      bCtx.shadowColor = `hsla(${b.hue}, 90%, 70%, ${b.alpha})`;
+      bCtx.shadowBlur = 15;
+      bCtx.fillStyle = `hsla(${b.hue}, 80%, 85%, ${b.alpha})`;
+      bCtx.fillText(b.text, b.x, b.y);
+      // 外层光晕
+      bCtx.shadowBlur = 30;
+      bCtx.fillStyle = `hsla(${b.hue}, 70%, 75%, ${b.alpha * 0.5})`;
+      bCtx.fillText(b.text, b.x, b.y);
+      bCtx.restore();
+    }
+  }
+
+  // ====== 主循环 ======
+  function loop() {
+    drawStars();
+    updateMeteorSpawner();
+    drawMeteors();
+    drawBlessings();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  loop();
+
+  // ====== 交互 ======
+  const input = document.getElementById('blessingInput');
+  const inputWrap = document.getElementById('inputWrap');
+  const sendBtn = document.getElementById('sendBtn');
+  const tip = document.getElementById('tip');
+  const toast = document.getElementById('toast');
+  const historyBtn = document.getElementById('historyBtn');
+  const historyPanel = document.getElementById('historyPanel');
+  const panelClose = document.getElementById('panelClose');
+  const mask = document.getElementById('mask');
+  const historyList = document.getElementById('historyList');
+  const clearAll = document.getElementById('clearAll');
+
+  // 自适应高度
+  function autoResize() {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 90) + 'px';
+  }
+  input.addEventListener('input', () => {
+    autoResize();
+    sendBtn.disabled = input.value.trim().length === 0;
+  });
+  input.addEventListener('focus', () => {
+    inputWrap.classList.add('focus');
+    tip.style.opacity = '0';
+  });
+  input.addEventListener('blur', () => {
+    inputWrap.classList.remove('focus');
+    setTimeout(() => { tip.style.opacity = ''; }, 300);
+  });
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  function sendBlessing() {
+    const text = input.value.trim();
+    if (!text) return;
+    if (text.length > 50) {
+      showToast('祝福太长啦，最多50个字哦～');
+      return;
+    }
+    launchBlessing(text);
+    saveBlessing(text);
+    input.value = '';
+    autoResize();
+    sendBtn.disabled = true;
+    showToast('祝福已化作流星 ✨');
+    renderHistory();
+  }
+
+  sendBtn.addEventListener('click', sendBlessing);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendBlessing();
+    }
+  });
+
+  // ====== 历史祝福 localStorage ======
+  const STORAGE_KEY = 'meteor_blessings_v1';
+  function getBlessings() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    } catch(e) { return []; }
+  }
+  function saveBlessing(text) {
+    const list = getBlessings();
+    list.unshift({ text: text, time: Date.now() });
+    if (list.length > 50) list.pop();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+  function removeBlessing(index) {
+    const list = getBlessings();
+    list.splice(index, 1);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    renderHistory();
+  }
+  function clearBlessings() {
+    localStorage.removeItem(STORAGE_KEY);
+    renderHistory();
+  }
+  function formatTime(ts) {
+    const d = new Date(ts);
+    const pad = n => n < 10 ? '0' + n : n;
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function renderHistory() {
+    const list = getBlessings();
+    if (list.length === 0) {
+      historyList.innerHTML = '<div class="empty-hint">还没有写下祝福<br>去夜空中许下第一个心愿吧 ✨</div>';
+      return;
+    }
+    historyList.innerHTML = list.map((item, i) => `
+      <div class="blessing-item">
+        <span class="del" data-idx="${i}">✕</span>
+        ${escapeHtml(item.text)}
+        <span class="time">${formatTime(item.time)}</span>
+      </div>
+    `).join('');
+    historyList.querySelectorAll('.del').forEach(el => {
+      el.addEventListener('click', () => {
+        removeBlessing(parseInt(el.dataset.idx));
+      });
+    });
+  }
+  function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  // 侧边栏开关
+  historyBtn.addEventListener('click', () => {
+    historyPanel.classList.add('open');
+    mask.classList.add('show');
+    renderHistory();
+  });
+  panelClose.addEventListener('click', closePanel);
+  mask.addEventListener('click', closePanel);
+  function closePanel() {
+    historyPanel.classList.remove('open');
+    mask.classList.remove('show');
+  }
+  clearAll.addEventListener('click', () => {
+    if (getBlessings().length === 0) return;
+    if (confirm('确定要清空所有祝福吗？')) {
+      clearBlessings();
+      showToast('已清空');
+    }
+  });
+
+  // 初次加载时，把历史祝福重新飘到夜空（少量）
+  function replayHistorical() {
+    const list = getBlessings().slice(0, 5);
+    list.forEach((item, i) => {
+      setTimeout(() => launchBlessing(item.text), i * 1200 + 500);
+    });
+  }
+  setTimeout(replayHistorical, 800);
+
+  // 点击空白处也能触发流星（增加趣味性）
+  document.getElementById('sky').addEventListener('click', (e) => {
+    // 生成一颗从点击处附近飞过的流星
+    const angle = Math.PI / 4 + (Math.random() * 0.4 - 0.2);
+    const speed = Math.random() * 4 + 7;
+    meteors.push({
+      x: e.clientX + (Math.random()-0.5) * 100,
+      y: e.clientY - 100,
+      vx: -Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      len: 120,
+      color: ['255,255,255', '200,180,255'],
+      life: 1,
+      decay: 0.012,
+      width: 1.8
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
