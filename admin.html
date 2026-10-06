@@ -244,11 +244,25 @@
 
 <script>
   const CLOUD_API = 'https://api.restful-api.dev/objects';
-  const CLOUD_TAG = 'meteor-wish';
+  const STORE_ID = 'ff808181a09d98f701a111ddfc4d0ac2';
   const PASSWORD = 'meteor2024'; // 默认密码，可修改
   const AUTH_KEY = 'meteor_admin_auth';
 
   let allWishes = [];
+
+  function getStore() {
+    return fetch(`${CLOUD_API}/${STORE_ID}`)
+      .then(r => r.json())
+      .then(o => (o.data && o.data.wishes) || [])
+      .catch(() => []);
+  }
+  function saveStore(wishes) {
+    return fetch(`${CLOUD_API}/${STORE_ID}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'meteor-wishes-store', data: { wishes: wishes } })
+    });
+  }
 
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -304,11 +318,8 @@
     const list = document.getElementById('wishList');
     list.innerHTML = '<div class="loading"><div class="spinner"></div>加载中...</div>';
     try {
-      const res = await fetch(CLOUD_API);
-      const data = await res.json();
-      allWishes = (data || [])
-        .filter(o => o && o.name === CLOUD_TAG && o.data && o.data.text)
-        .sort((a,b) => (b.data.time||0) - (a.data.time||0));
+      allWishes = await getStore();
+      allWishes.sort((a,b) => (b.time||0) - (a.time||0));
       renderWishes();
       updateStats();
     } catch(e) {
@@ -323,10 +334,10 @@
     const texts = new Set();
     let today = 0, week = 0;
     allWishes.forEach(w => {
-      const t = w.data.time || 0;
+      const t = w.time || 0;
       if (t >= todayStart.getTime()) today++;
       if (t >= weekAgo) week++;
-      texts.add(w.data.text);
+      texts.add(w.text);
     });
     document.getElementById('statTotal').textContent = allWishes.length;
     document.getElementById('statToday').textContent = today;
@@ -340,48 +351,50 @@
       list.innerHTML = '<div class="empty-state"><div class="icon">🌟</div>还没有用户留下愿望<br>分享页面给朋友们吧～</div>';
       return;
     }
-    list.innerHTML = allWishes.map(w => `
-      <div class="wish-item" data-id="${w.id}">
-        <div class="wish-text">${escapeHtml(w.data.text)}</div>
-        <div class="wish-meta">${formatTime(w.data.time)}</div>
-        <button class="wish-del" onclick="delWish('${w.id}')">✕</button>
+    list.innerHTML = allWishes.map((w, i) => `
+      <div class="wish-item">
+        <div class="wish-text">${escapeHtml(w.text)}</div>
+        <div class="wish-meta">${formatTime(w.time)}</div>
+        <button class="wish-del" onclick="delWish(${i})">✕</button>
       </div>
     `).join('');
   }
 
-  async function delWish(id) {
+  async function delWish(index) {
     if (!confirm('确定删除这条愿望吗？')) return;
     try {
-      await fetch(`${CLOUD_API}/${id}`, { method: 'DELETE' });
-      allWishes = allWishes.filter(w => w.id !== id);
+      allWishes.splice(index, 1);
+      await saveStore(allWishes);
       renderWishes();
       updateStats();
       showToast('已删除');
     } catch(e) {
       showToast('删除失败');
+      loadWishes();
     }
   }
 
   async function clearAll() {
     if (allWishes.length === 0) { showToast('没有可清空的愿望'); return; }
     if (!confirm(`确定清空全部 ${allWishes.length} 条愿望吗？此操作不可恢复！`)) return;
-    let success = 0;
-    for (const w of allWishes) {
-      try {
-        await fetch(`${CLOUD_API}/${w.id}`, { method: 'DELETE' });
-        success++;
-      } catch(e) {}
+    try {
+      await saveStore([]);
+      allWishes = [];
+      renderWishes();
+      updateStats();
+      showToast('已清空全部愿望');
+    } catch(e) {
+      showToast('清空失败');
+      loadWishes();
     }
-    showToast(`已清空 ${success} 条愿望`);
-    loadWishes();
   }
 
   function exportWishes() {
     if (allWishes.length === 0) { showToast('没有数据可导出'); return; }
     const data = allWishes.map(w => ({
-      text: w.data.text,
-      time: formatTime(w.data.time),
-      timestamp: w.data.time
+      text: w.text,
+      time: formatTime(w.time),
+      timestamp: w.time
     }));
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
