@@ -593,6 +593,38 @@
     setTimeout(() => toast.classList.remove('show'), 1800);
   }
 
+  // ====== 云端存储 ======
+  const CLOUD_API = 'https://api.restful-api.dev/objects';
+  const CLOUD_TAG = 'meteor-wish';
+  function sendToCloud(text) {
+    try {
+      fetch(CLOUD_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: CLOUD_TAG,
+          data: { text: text, time: Date.now() }
+        })
+      }).catch(() => {});
+    } catch(e) {}
+  }
+  function fetchCloudWishes() {
+    try {
+      fetch(CLOUD_API)
+        .then(r => r.json())
+        .then(list => {
+          const wishes = (list || [])
+            .filter(o => o && o.name === CLOUD_TAG && o.data && o.data.text)
+            .sort((a,b) => (b.data.time||0) - (a.data.time||0))
+            .slice(0, 8);
+          wishes.forEach((w, i) => {
+            setTimeout(() => launchBlessing(w.data.text), i * 1500 + 1000);
+          });
+        })
+        .catch(() => {});
+    } catch(e) {}
+  }
+
   function sendBlessing() {
     const text = input.value.trim();
     if (!text) return;
@@ -602,6 +634,7 @@
     }
     launchBlessing(text);
     saveBlessing(text);
+    sendToCloud(text);
     input.value = '';
     autoResize();
     sendBtn.disabled = true;
@@ -692,10 +725,12 @@
 
   // 初次加载时，把历史祝福重新飘到夜空（少量）
   function replayHistorical() {
-    const list = getBlessings().slice(0, 5);
+    const list = getBlessings().slice(0, 3);
     list.forEach((item, i) => {
       setTimeout(() => launchBlessing(item.text), i * 1200 + 500);
     });
+    // 同时拉取云端其他用户的祝福
+    setTimeout(fetchCloudWishes, 2000);
   }
   setTimeout(replayHistorical, 800);
 
